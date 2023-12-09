@@ -5,6 +5,12 @@ __pycache__/
 
 # C extensions
 *.so
+#virtual env
+/myenv/
+/venv/
+/.venv/
+/skinclassifier/
+
 
 # Distribution / packaging
 .Python
