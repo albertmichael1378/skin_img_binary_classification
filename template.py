@@ -3,7 +3,7 @@ from pathlib import Path
 import logging
 
 logging.basicConfig(level=logging.INFO,format='[%(asctime)s]:%(message)s:')
-project_name="vgg-16-classifier"
+project_name="vgg16classifier"
 list_of_files = [
     ".github/workflows/.gitkeep",
     f"src/{project_name}/__init__.py",

@@ -10,6 +10,8 @@ __pycache__/
 /venv/
 /.venv/
 /skinclassifier/
+#model and data files
+artifacts/*
 
 
 # Distribution / packaging
