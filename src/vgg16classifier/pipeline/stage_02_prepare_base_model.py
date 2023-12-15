@@ -1,6 +1,6 @@
-from cnnClassifier.config.configuration import ConfigurationManager
-from cnnClassifier.components.prepare_base_model import PrepareBaseModel
-from cnnClassifier import logger
+from vgg16classifier.config.configuration import ConfigurationManager
+from vgg16classifier.components.prepare_base_model import PrepareBaseModel
+from vgg16classifier import logger
 
 
 STAGE_NAME = "Prepare base model"
