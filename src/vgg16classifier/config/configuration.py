@@ -1,6 +1,6 @@
 from vgg16classifier.constants import*
 from vgg16classifier.utils.common import read_yaml, create_directories
-from vgg16classifier.entity.configaration_entities import (PrepareBaseModelConfig,PrepareCallbacksConfig,TrainingConfig,EvaluationConfig)
+from vgg16classifier.entity.configaration_entities import (PrepareBaseModelConfig,PrepareCallbacksConfig,TrainingConfig,EvaluationConfigs)
 import os
 
 class ConfigurationManager:
@@ -67,10 +67,10 @@ class ConfigurationManager:
         )
 
         return training_config
-    def get_validation_config(self) -> EvaluationConfig:
-        eval_config = EvaluationConfig(
+    def get_validation_config(self) -> EvaluationConfigs:
+        eval_config = EvaluationConfigs(
             path_of_model=Path("artifacts/training/vgg16model.h5"),
-            training_data=Path("artifacts/data_ingestion/Chicken-fecal-images"),
+            training_data=Path("artifacts/data_source/skin-disease-images"),
             all_params=self.params,
             params_image_size=self.params.IMAGE_SIZE,
             params_batch_size=self.params.BATCH_SIZE

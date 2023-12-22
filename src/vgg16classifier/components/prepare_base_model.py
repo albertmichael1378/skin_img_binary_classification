@@ -3,7 +3,6 @@ import tensorflow as tf
 from pathlib import Path
 from vgg16classifier.entity.configaration_entities import PrepareBaseModelConfig
 
-
 class PrepareBaseModel:
     def __init__(self, config: PrepareBaseModelConfig):
         self.config = config
@@ -25,22 +24,29 @@ class PrepareBaseModel:
         elif (freeze_till is not None) and (freeze_till > 0):
             for layer in model.layers[:-freeze_till]:
                 model.trainable = False
-
-        flatten_in = tf.keras.layers.Flatten()(model.output)
-        prediction = tf.keras.layers.Dense(
-            units=classes,
-            activation="softmax"
-        )(flatten_in)
+        x=model.output
+        x = tf.keras.layers.Flatten()(x)
+        x = tf.keras.layers.Dense(units=classes, activation='sigmoid')(x)
+        # prediction = tf.keras.layers.Dense(
+        #     units=classes,
+        #     activation="sigmoid"
+        # )(flatten_in)
 
         full_model = tf.keras.models.Model(
             inputs=model.input,
-            outputs=prediction
+            outputs=x
         )
 
         full_model.compile(
             optimizer=tf.keras.optimizers.SGD(learning_rate=learning_rate),
-            loss=tf.keras.losses.CategoricalCrossentropy(),
-            metrics=["accuracy"]
+            loss=tf.keras.losses.BinaryCrossentropy(),
+            metrics=["accuracy",tf.keras.metrics.Precision(),
+            tf.keras.metrics.Recall(),
+            tf.keras.metrics.AUC(name='auc'),  # Area under the ROC curve
+            tf.keras.metrics.BinaryAccuracy(),  # Binary accuracy
+        # You can add more metrics as needed
+    ]
+
         )
 
         full_model.summary()
