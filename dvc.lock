@@ -1,0 +1,68 @@
+schema: '2.0'
+stages:
+  prepare_base_model:
+    cmd: python src/vgg16classifier/pipeline/stage_02_prepare_base_model.py
+    deps:
+    - path: config/config.yaml
+      hash: md5
+      md5: 6d1165e1d760a7c5f33b0bc39f77a5ec
+      size: 714
+    - path: src/vgg16classifier/pipeline/stage_02_prepare_base_model.py
+      hash: md5
+      md5: 7ef92b613db02becd0c4f4eb9c68a5c3
+      size: 1009
+    params:
+      params.yaml:
+        CLASSES: 2
+        IMAGE_SIZE:
+        - 224
+        - 224
+        - 3
+        INCLUDE_TOP: false
+        LEARNING_RATE: 0.03
+        WEIGHTS: imagenet
+    outs:
+    - path: artifacts/prepare_base_model
+      hash: md5
+      md5: e1109815789fa04d5042258193756bbc.dir
+      size: 118059248
+      nfiles: 2
+  training:
+    cmd: python src/vgg16classifier/pipeline/stage_03_training.py
+    deps:
+    - path: artifacts/data_source/skin-disease-images
+      hash: md5
+      md5: 705dcbb24742dd4cbae6f28bfc7700ad.dir
+      size: 213318011
+      nfiles: 630
+    - path: artifacts/prepare_base_model
+      hash: md5
+      md5: e1109815789fa04d5042258193756bbc.dir
+      size: 118059248
+      nfiles: 2
+    - path: config/config.yaml
+      hash: md5
+      md5: 6d1165e1d760a7c5f33b0bc39f77a5ec
+      size: 714
+    - path: src/vgg16classifier/components/prepare_callbacks.py
+      hash: md5
+      md5: d6d81f3998a12bc2b3d79828aa5df484
+      size: 1050
+    - path: src/vgg16classifier/pipeline/stage_03_training.py
+      hash: md5
+      md5: c8062a896aa1e78d9e61a2b2382372bd
+      size: 1286
+    params:
+      params.yaml:
+        AUGMENTATION: true
+        BATCH_SIZE: 17
+        EPOCHS: 54
+        IMAGE_SIZE:
+        - 224
+        - 224
+        - 3
+    outs:
+    - path: artifacts/training/vgg16model.h5
+      hash: md5
+      md5: fe4055279ff5a1559e9d9b42d89e5bcd
+      size: 59340720
