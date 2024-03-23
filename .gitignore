@@ -5,6 +5,7 @@ __pycache__/
 
 # C extensions
 *.so
+<<<<<<< HEAD
 #virtual env
 /myenv/
 /venv/
@@ -13,6 +14,8 @@ __pycache__/
 #model and data files
 artifacts/*
 
+=======
+>>>>>>> 1bf3f0995ae549aca45f9cb50055401f2a66c848
 
 # Distribution / packaging
 .Python
