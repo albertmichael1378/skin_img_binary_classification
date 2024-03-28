@@ -1,5 +1,5 @@
 FROM python:3.8-alpine
-RUN apk update -y && apk install awscli -y
+RUN apk update  && apk add aws-cli
 
 WORKDIR /webapp
 COPY . /webapp
