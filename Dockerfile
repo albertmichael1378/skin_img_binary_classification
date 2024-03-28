@@ -1,5 +1,5 @@
 FROM python:3.8-alpine
-RUN apk update -y && apk install awscli -y
+RUN apt update -y && apt install awscli -y
 
 WORKDIR /webapp
 COPY . /webapp
