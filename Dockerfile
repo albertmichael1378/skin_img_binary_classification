@@ -1,5 +1,5 @@
-FROM python:3.8-alpine
-RUN apt update  && apt add aws-cli
+FROM python:3.8-slim-buster
+RUN apt update -y && apt install awscli -y
 
 WORKDIR /webapp
 COPY . /webapp
