@@ -30,6 +30,9 @@ jobs:
     needs: integration
     runs-on: ubuntu-latest
     steps:
+      - name: Update pip
+        run: pip install --upgrade pip
+
       - name: Checkout Code
         uses: actions/checkout@v3
 
