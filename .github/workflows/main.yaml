@@ -64,17 +64,19 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-      - name: Debug Secrets and Image Reference
+      
+  Continuous-Deployment:
+
+    needs: build-and-push-ecr-image
+    runs-on: self-hosted
+    steps:
+        name: Debug Secrets and Image Reference
         run: |
           echo "AWS ECR Login URI: ${{ secrets.AWS_ECR_LOGIN_URI }}"
           echo "ECR Repository Name: ${{ secrets.ECR_REPOSITORY_NAME }}"
           echo "GitHub SHA: ${{ github.sha }}"
           echo "Docker Image Reference: ${{ secrets.AWS_ECR_LOGIN_URI }}/${{ secrets.ECR_REPOSITORY_NAME }}:${{ github.sha }}"
                 
-  Continuous-Deployment:
-    needs: build-and-push-ecr-image
-    runs-on: self-hosted
-    steps:
       - name: Checkout
         uses: actions/checkout@v3
 
