@@ -84,7 +84,7 @@ jobs:
       
       - name: Pull latest images
         run: |
-         docker pull ${{ secrets.ECR_REPOSITORY_NAME }}:$latest
+         docker pull ${{ secrets.ECR_REPOSITORY_NAME }}:$IMAGE_TAG
          
       # - name: Stop and remove container if running
       #   run: |
