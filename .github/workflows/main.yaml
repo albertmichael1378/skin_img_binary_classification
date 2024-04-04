@@ -95,15 +95,15 @@ jobs:
       #    docker ps -q --filter "name=cnncls" | grep -q . && docker stop cnncls && docker rm -fv cnncls
        
       - name: Run Docker Image to serve users
-        run: 
+         
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
           IMAGE_TAG: latest
           AWS_ID: ${{ secrets.AWS_ID }}
           aws-region: ${{ secrets.AWS_REGION }}|
+        run:
          docker run -d -p 8080:8080 --name cnncls <$AWS_ID>.dkr.ecr.<$aws-region>.amazonaws.com/<$ECR_REPOSITORY>:$IMAGE_TAG
-
       - name: Clean previous images and containers
         run: |
          docker system prune -f
