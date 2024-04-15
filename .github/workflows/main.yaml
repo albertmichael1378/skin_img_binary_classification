@@ -103,7 +103,8 @@ jobs:
           AWS_ID: ${{ secrets.AWS_ID }}
           aws_region: ${{ secrets.AWS_REGION }}|
         run:
-         docker run -d -p 8080:8080 --name cnncls <$AWS_ID>.dkr.ecr.<$aws_region>.amazonaws.com/<$ECR_REPOSITORY>:latest
+         docker run -d -p 8080:8080 --name cnncls ${AWS_ID}.dkr.ecr.${aws_region}.amazonaws.com/${ECR_REPOSITORY}:${IMAGE_TAG}
+
       - name: Clean previous images and containers
         run: |
          docker system prune -f
