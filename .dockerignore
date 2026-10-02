@@ -1,0 +1,25 @@
+.git
+.dvc/cache/
+**/__pycache__/
+*.py[cod]
+
+# Local Python environments
+.venv/
+venv/
+env/
+skinclassifier/
+
+# Generated and development files
+build/
+dist/
+*.egg-info/
+.ipynb_checkpoints/
+research/
+logs/
+
+# Training inputs and intermediate artifacts
+artifacts/data_source/
+artifacts/prepare_base_model/
+artifacts/prepare_callbacks/
+artifacts/training/*
+!artifacts/training/vgg16model.h5

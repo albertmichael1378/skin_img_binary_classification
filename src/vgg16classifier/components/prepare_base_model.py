@@ -64,7 +64,7 @@ class PrepareBaseModel:
         self.save_model(path=self.config.updated_base_model_path, model=self.full_model)
 
     @staticmethod
-    def save_model(path: Path, model: tf.keras.Model):
+    def save_model(path: Path, model:tf.keras.Model):
         model.save(path)
 
 
