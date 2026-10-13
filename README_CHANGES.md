@@ -108,3 +108,41 @@ changed during this session.
 ### Remaining Setup
 
 - Nginx must still be downloaded/extracted on the Windows machine, then started with this configuration. Ngrok should tunnel to port 80 if the goal is to expose Nginx, rather than bypassing it by tunneling directly to port 8080.
+
+## 2026-10-06: ML Project Structure and Run Metadata
+
+### Current Findings
+
+- The active binary data path is `artifacts/data_source/Binary_Classification`,
+  with 8,473 `cancerous` and 16,858 `non_cancerous` images at inspection time.
+  The source-label mapping and license/provenance still require verification.
+- `dvc.lock` still records the previous 630-image dataset and older parameters.
+- The current Flask source has no `/train` route. Prediction still uses a shared
+  image filename and needs upload/concurrency hardening.
+- The current evaluation resplits the training directory and is not an
+  independent test result.
+
+### Changes Applied
+
+- Replaced the minimal README with setup instructions, current-state caveats,
+  repository layout, binary label contract, and run metadata details.
+- Added a phased ML improvement plan and a JSON Schema for run metadata.
+- Added training-run metadata for status, data inventory fingerprint, class
+  mapping/counts, parameters/preprocessing, environment, history, and model
+  checksum. The training method now records failures and re-raises them.
+- Fixed binary inference to threshold a one-unit sigmoid output (and retain
+  compatibility with a two-output binary model); output labels now reflect the
+  folder classes.
+- Updated the DVC metrics path to match the JSON file actually written by the
+  evaluation stage.
+
+### Verification and Remaining Work
+
+- Focused metadata and binary-inference tests pass.
+- `python -m dvc --version`, `python -m dvc stage list`, and `python -m dvc dag`
+  work in the project environment. `python -m dvc status` did not finish within
+  a 60-second check. A full `dvc repro` was not run because it would start a
+  long training run.
+- The split/leakage, VGG16 preprocessing, independent test evaluation, source
+  label mapping, DVC lockfile refresh, and production API hardening remain
+  unresolved.

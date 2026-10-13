@@ -1,0 +1,78 @@
+{
+  "dataset": {
+    "class_counts": {
+      "cancerous": 8473,
+      "non_cancerous": 16858
+    },
+    "class_indices": {
+      "cancerous": 0,
+      "non_cancerous": 1
+    },
+    "manifest_algorithm": "sha256(relative_path_and_file_size)",
+    "manifest_sha256": "5d4eed19bf7b8c846acbcc039f2374df1edd8ea92b5b83829e1d315550971860",
+    "root": "artifacts\\data_source\\Binary_Classification",
+    "sample_count": 25331,
+    "split_class_counts": {
+      "training": {
+        "cancerous": 6800,
+        "non_cancerous": 13465
+      },
+      "validation": {
+        "cancerous": 1673,
+        "non_cancerous": 3393
+      }
+    }
+  },
+  "environment": {
+    "dvc": "3.33.4",
+    "numpy": "1.26.4",
+    "python": "3.10.11",
+    "tensorflow": "2.15.0"
+  },
+  "finished_at_utc": null,
+  "model": {
+    "path": "artifacts\\training\\vgg16model.h5",
+    "sha256": null
+  },
+  "run_id": "9c1af9c9-6084-4dea-89d1-997a3d16f6c2",
+  "schema_version": 1,
+  "source": {
+    "git_commit": "56b3cd722e2d6423515855217f3a2f756fab3d96",
+    "git_revision_error": null,
+    "git_worktree_clean": false
+  },
+  "started_at_utc": "2026-10-10T16:59:40.996771+00:00",
+  "status": "running",
+  "training": {
+    "error": null,
+    "history": {},
+    "loss": "<keras.src.losses.BinaryCrossentropy object at 0x00000282B2B9A590>",
+    "optimizer": "SGD",
+    "parameters": {
+      "SEED": 42,
+      "augmentation": true,
+      "batch_size": 16,
+      "class_weight": {
+        "0": 1.4900735294117646,
+        "1": 0.7525064983290011
+      },
+      "epochs": 20,
+      "image_size": [
+        224,
+        224,
+        3
+      ],
+      "learning_rate": 9.999999747378752e-05,
+      "validation_split": 0.2
+    },
+    "preprocessing": {
+      "color_mode": "rgb",
+      "rescale": null,
+      "target_size": [
+        224,
+        224
+      ],
+      "vgg16_preprocess_input": false
+    }
+  }
+}

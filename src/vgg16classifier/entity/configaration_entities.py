@@ -21,6 +21,8 @@ class PrepareCallbacksConfig:
 @dataclass(frozen=True)
 class TrainingConfig:
     root_dir: Path
+    SEED: int
+    metadata_path: Path
     trained_model_path: Path
     updated_base_model_path: Path
     training_data: Path

@@ -22,8 +22,11 @@ stages:
     deps:
       - src/vgg16classifier/pipeline/stage_03_training.py
       - src/vgg16classifier/components/prepare_callbacks.py
+      - src/vgg16classifier/components/training.py
+      - src/vgg16classifier/components/run_metadata.py
+      - src/vgg16classifier/config/configuration.py
       - config/config.yaml
-      - artifacts/data_source/skin-disease-images
+      - artifacts/data_source/Binary_Classification
       - artifacts/prepare_base_model
     params:
       - IMAGE_SIZE
@@ -32,6 +35,7 @@ stages:
       - AUGMENTATION
     outs:
       - artifacts/training/vgg16model.h5
+      - artifacts/training/run_metadata.json
 
 
 
@@ -40,14 +44,14 @@ stages:
     cmd: python src/vgg16classifier/pipeline/stage_04_evaluation.py
     deps:
       - src/vgg16classifier/pipeline/stage_04_evaluation.py
+      - src/vgg16classifier/components/evaluation.py
+      - src/vgg16classifier/config/configuration.py
       - config/config.yaml
-      - artifacts/data_source/skin-disease-images
+      - artifacts/data_source/Binary_Classification
       - artifacts/training/vgg16model.h5
     params:
       - IMAGE_SIZE
       - BATCH_SIZE
     metrics:
-    - scores.json:
+    - evaluation_scores_com726.json:
         cache: false
-
-

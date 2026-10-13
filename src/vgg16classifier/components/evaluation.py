@@ -1,3 +1,7 @@
+# 1. Initialize environment FIRST
+from vgg16classifier.utils.common import set_deterministic_environment
+set_deterministic_environment(seed=42)
+
 import tensorflow as tf
 from vgg16classifier.entity.configaration_entities import EvaluationConfigs
 from vgg16classifier.utils.common import save_json
@@ -25,7 +29,7 @@ class Evaluation:
         )
 
         self.valid_generator = valid_datagenerator.flow_from_directory(
-            directory=self.config.training_data,
+            directory=self.config.Evaluation_dir,
             subset="validation",
             shuffle=False,
             **dataflow_kwargs

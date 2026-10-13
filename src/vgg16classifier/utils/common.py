@@ -9,8 +9,28 @@ from box import ConfigBox
 from pathlib import Path
 from typing import Any
 import base64
+import random
+import numpy as np
 
-
+def set_deterministic_environment(seed: int = 42):
+    """
+    Sets all environment variables and random seeds for reproducible ML training.
+    Must be called before importing any TensorFlow components.
+    """
+    logger.info(f"Setting deterministic environment with seed: {seed}")
+    
+    # 1. Set OS-level variables FIRST
+    os.environ['TF_DETERMINISTIC_OPS'] = '1'
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    
+    # 2. Set base Python and Numpy seeds
+    random.seed(seed)
+    np.random.seed(seed)
+    
+    # 3. Import TensorFlow locally INSIDE the function
+    # This guarantees the OS variables are loaded before the C++ backend boots
+    import tensorflow as tf
+    tf.random.set_seed(seed)
 def read_yaml(path_to_yaml: Path) -> ConfigBox:
     """reads yaml file and returns
 
@@ -60,6 +80,8 @@ def save_json(path: Path, data: dict):
         json.dump(data, f, indent=4)
 
     logger.info(f"json file saved at: {path}")
+
+
 
 
 

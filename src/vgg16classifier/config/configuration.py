@@ -50,13 +50,16 @@ class ConfigurationManager:
         training = self.config.training
         prepare_base_model = self.config.prepare_base_model
         params = self.params
-        training_data =os.path.join(self.config.data_source.unzip_dir,"skin-disease-images")
+        training_data =os.path.join(self.config.data_source.unzip_dir,"Binary_Classification")
         create_directories([
             Path(training.root_dir)
         ])
+      
 
         training_config = TrainingConfig(
+            SEED=self.params.SEED,
             root_dir=Path(training.root_dir),
+            metadata_path= Path(training.metadata_path),
             trained_model_path=Path(training.trained_model_path),
             updated_base_model_path=Path(prepare_base_model.updated_base_model_path),
             training_data=Path(training_data),
@@ -70,7 +73,8 @@ class ConfigurationManager:
     def get_validation_config(self) -> EvaluationConfigs:
         eval_config = EvaluationConfigs(
             path_of_model=Path("artifacts/training/vgg16model.h5"),
-            training_data=Path("artifacts/data_source/skin-disease-images"),
+            training_data=Path("artifacts/data_source/Binary_Classification"),
+            Evaluation_dir=Path("artifacts/data_source/skin-disease-images"),
             all_params=self.params,
             params_image_size=self.params.IMAGE_SIZE,
             params_batch_size=self.params.BATCH_SIZE
