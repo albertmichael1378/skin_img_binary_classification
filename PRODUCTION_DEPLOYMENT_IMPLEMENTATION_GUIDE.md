@@ -1,6 +1,6 @@
 # Production Deployment Implementation Guide
 
-**Prepared:** 2026-09-30  
+**Prepared:** 2026-09-30
 **Scope:** A project-specific implementation roadmap for an edge/API/inference/queue/AWS deployment. This is a plan, not a claim that the current model is clinically validated or ready to diagnose.
 
 ## Recommended Direction
@@ -39,12 +39,16 @@ The diagram is a later-stage target, not a requirement to launch every AWS servi
 
 ## Project-Specific Starting Point
 
-The current project has a Flask `webapp.py`, `/predict` accepts a base64 JSON body, `/train` runs `main.py`, and prediction writes to one shared `inputImage.jpg`. The Dockerfile starts Flask's development server. `requirements.txt` combines inference, training, notebooks, plotting, DVC, and development dependencies.
+The current project has a Flask `webapp.py`; `/predict` accepts a base64 JSON
+body and prediction writes to one shared `inputImage.jpg`. The current app no
+longer registers a public `/train` route. The Dockerfile starts Flask's
+development server, and `requirements.txt` combines inference, training,
+notebooks, plotting, DVC, and development dependencies.
 
 Before production work:
 
 - Follow the existing [Model Research and Production Safety](MODEL_RESEARCH_AND_PRODUCTION_SAFETY.md) gates. In particular, the current dataset/evaluation and train-versus-inference preprocessing are not reliable enough to support clinical claims.
-- Remove training from the public serving app. Train offline in a controlled workflow and publish a versioned model artifact separately.
+- Keep training out of the public serving app (the route is absent from the current Flask source). Train offline in a controlled workflow and publish a versioned model artifact separately.
 - Replace the shared image path with validated in-memory image handling or unique temporary objects. Never put raw image bytes/base64 into Redis task messages or logs.
 - Split runtime, training, and development dependencies. Keep Jupyter, DVC, plotting, and training-only packages out of the inference image unless the runtime actually imports them. Add FastAPI/ASGI, ONNX Runtime, Celery, Redis/SQS, and AWS SDK dependencies only when the corresponding phase is implemented; pin/lock them then.
 - Keep the existing pinned TensorFlow environment as the conversion/training environment initially. The inference container can use `onnxruntime` instead of TensorFlow only after conversion and parity checks pass.
@@ -54,9 +58,16 @@ Before production work:
 Do this before optimizing or exposing an inference endpoint:
 
 1. Resolve the data split and preprocessing issues described in the model safety report. Create patient/lesion/source-aware train, validation, and untouched test partitions where identifiers permit.
-2. Correct the classifier head, labels, and loss/activation pairing, then retrain. Save the class index map and exact preprocessing configuration with the artifact.
+2. Verify the current binary classifier head, source-to-binary label mapping,
+   and loss/activation pairing, then retrain. The current source uses one
+   sigmoid output with binary directory labels; verify the stored checkpoint
+   matches that source. Save the class index map and exact preprocessing
+   configuration with the artifact.
 3. Record the source commit, data manifest/hash, training parameters, library versions, model checksum, evaluation metrics, and intended inference input contract.
-4. Review test errors and subgroup performance with appropriate domain expertise. Do not claim diagnostic utility based on the present 630-image set.
+4. Review test errors and subgroup performance with appropriate domain
+   expertise. The current binary folders contain about 25,000 images, but
+   provenance, patient independence, label mapping, and independent test
+   performance have not been established; do not claim diagnostic utility.
 
 **Exit gate:** Reproducible model artifact; inference preprocessing matches training; independent held-out evaluation; documented limitations and model version.
 

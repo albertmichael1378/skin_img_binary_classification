@@ -1,4 +1,8 @@
 
+# 1. Initializing the environment FIRST
+from vgg16classifier.utils.common import set_deterministic_environment
+set_deterministic_environment(seed=42)
+
 import tensorflow as tf
 from pathlib import Path
 from vgg16classifier.entity.configaration_entities import PrepareBaseModelConfig
@@ -8,6 +12,7 @@ class PrepareBaseModel:
         self.config = config
 
     def get_base_model(self):
+        
         self.model = tf.keras.applications.vgg16.VGG16(
             input_shape=self.config.params_image_size,
             weights=self.config.params_weights,
@@ -20,17 +25,22 @@ class PrepareBaseModel:
     def _prepare_full_model(model, classes, freeze_all, freeze_till, learning_rate):
         if freeze_all:
             for layer in model.layers:
-                model.trainable = False
+                layer.trainable = False
         elif (freeze_till is not None) and (freeze_till > 0):
             for layer in model.layers[:-freeze_till]:
-                model.trainable = False
+                layer.trainable = False
         x=model.output
         x = tf.keras.layers.Flatten()(x)
-        x = tf.keras.layers.Dense(units=classes, activation='sigmoid')(x)
+        if classes == 2:
+            x = tf.keras.layers.Dense(units=1, activation='sigmoid')(x)
+        else:
+            # If you ever change to multi-class, it automatically switches to softmax
+            x = tf.keras.layers.Dense(units=classes, activation='softmax')(x)
         # prediction = tf.keras.layers.Dense(
         #     units=classes,
         #     activation="sigmoid"
         # )(flatten_in)
+        
 
         full_model = tf.keras.models.Model(
             inputs=model.input,
@@ -46,6 +56,7 @@ class PrepareBaseModel:
             tf.keras.metrics.BinaryAccuracy(),  # Binary accuracy
         # You can add more metrics as needed
     ]
+            
 
         )
 
@@ -66,7 +77,24 @@ class PrepareBaseModel:
     @staticmethod
     def save_model(path: Path, model:tf.keras.Model):
         model.save(path)
+import numpy as np
 
+def get_balanced_class_weights(labels):
+    """
+    Calculates balanced class weights identical to sklearn's compute_class_weight.
+    """
+    # Count how many times each class appears
+    class_counts = np.bincount(labels)
+    total_samples = len(labels)
+    num_classes = len(np.unique(labels))
+    
+    # Calculate the weight for each class
+    class_weights = {}
+    for class_id, count in enumerate(class_counts):
+        if count > 0: # Avoid division by zero
+            class_weights[class_id] = total_samples / (num_classes * count)
+            
+    return class_weights
 
 
 

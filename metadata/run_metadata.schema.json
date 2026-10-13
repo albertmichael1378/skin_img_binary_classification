@@ -1,0 +1,198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skin-lesion:schemas:run-metadata:1",
+  "title": "Skin lesion classification training run metadata",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "status",
+    "started_at_utc",
+    "source",
+    "dataset",
+    "training",
+    "environment",
+    "model"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": ["running", "completed", "failed"]
+    },
+    "started_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "finished_at_utc": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "source": {
+      "type": "object",
+      "required": ["git_commit"],
+      "properties": {
+        "git_commit": {
+          "type": ["string", "null"]
+        },
+        "git_worktree_clean": {
+          "type": ["boolean", "null"]
+        },
+        "git_revision_error": {
+          "type": ["string", "null"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "dataset": {
+      "type": "object",
+      "required": [
+        "root",
+        "manifest_algorithm",
+        "manifest_sha256",
+        "sample_count",
+        "class_indices",
+        "class_counts",
+        "split_class_counts"
+      ],
+      "properties": {
+        "root": {
+          "type": "string"
+        },
+        "manifest_algorithm": {
+          "const": "sha256(relative_path_and_file_size)"
+        },
+        "manifest_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "sample_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "class_indices": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "class_counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "split_class_counts": {
+          "type": "object",
+          "required": ["training", "validation"],
+          "properties": {
+            "training": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "validation": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "training": {
+      "type": "object",
+      "required": [
+        "parameters",
+        "preprocessing",
+        "optimizer",
+        "loss",
+        "history"
+      ],
+      "properties": {
+        "parameters": {
+          "type": "object"
+        },
+        "preprocessing": {
+          "type": "object"
+        },
+        "optimizer": {
+          "type": ["string", "null"]
+        },
+        "loss": {
+          "type": ["string", "null"]
+        },
+        "history": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "error": {
+          "type": ["object", "null"],
+          "properties": {
+            "type": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            }
+          },
+          "required": ["type", "message"],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "environment": {
+      "type": "object",
+      "required": ["python", "tensorflow", "numpy", "dvc"],
+      "properties": {
+        "python": {
+          "type": "string"
+        },
+        "tensorflow": {
+          "type": ["string", "null"]
+        },
+        "numpy": {
+          "type": ["string", "null"]
+        },
+        "dvc": {
+          "type": ["string", "null"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "model": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": ["string", "null"],
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
