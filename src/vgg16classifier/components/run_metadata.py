@@ -69,11 +69,21 @@ def _dataset_manifest(
     dataset_root: Path, relative_paths: Sequence[str]
 ) -> tuple[str, int]:
     digest = hashlib.sha256()
+    resolved_root = dataset_root.resolve()
     unique_paths = sorted(set(relative_paths))
-    for relative_path in unique_paths:
-        image_path = Path(relative_path)
+    for filename in unique_paths:
+        image_path = Path(filename)
+        if not image_path.is_absolute():
+            image_path = resolved_root / image_path
+        image_path = image_path.resolve()
+        try:
+            relative_path = image_path.relative_to(resolved_root).as_posix()
+        except ValueError as error:
+            raise ValueError(
+                f"Dataset file is outside the configured dataset root: {filename}"
+            ) from error
         size = image_path.stat().st_size
-        digest.update(relative_path.replace("\\", "/").encode("utf-8"))
+        digest.update(relative_path.encode("utf-8"))
         digest.update(b"\0")
         digest.update(str(size).encode("ascii"))
         digest.update(b"\n")

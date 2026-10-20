@@ -24,9 +24,11 @@ class TrainingMetadataTests(unittest.TestCase):
             metadata = create_training_metadata(
                 repo_root=root,
                 dataset_root=dataset_root,
-                train_filenames=["cancerous/one.jpg"],
+                train_filenames=[str(dataset_root / "cancerous" / "one.jpg")],
                 train_labels=[0],
-                validation_filenames=["non_cancerous/two.jpg"],
+                validation_filenames=[
+                    str(dataset_root / "non_cancerous" / "two.jpg")
+                ],
                 validation_labels=[1],
                 class_indices={"cancerous": 0, "non_cancerous": 1},
                 parameters={"epochs": 2, "batch_size": 1},
