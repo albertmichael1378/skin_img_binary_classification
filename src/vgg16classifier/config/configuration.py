@@ -54,7 +54,14 @@ class ConfigurationManager:
         create_directories([
             Path(training.root_dir)
         ])
-      
+        import os
+
+        if "KAGGLE_KERNEL_RUN_TYPE" in os.environ:
+            # Use Kaggle's read-only mounted dataset path
+            DATA_PATH = self.config.training.kaggle_data_dir
+        else:
+            # Use the local project path
+            DATA_PATH = training_data
 
         training_config = TrainingConfig(
             SEED=self.params.SEED,
@@ -62,7 +69,7 @@ class ConfigurationManager:
             metadata_path= Path(training.metadata_path),
             trained_model_path=Path(training.trained_model_path),
             updated_base_model_path=Path(prepare_base_model.updated_base_model_path),
-            training_data=Path(training_data),
+            training_data=Path(DATA_PATH),
             params_epochs=params.EPOCHS,
             params_batch_size=params.BATCH_SIZE,
             params_is_augmentation=params.AUGMENTATION,

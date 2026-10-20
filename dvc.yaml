@@ -1,3 +1,7 @@
+
+# 1. Tell DVC to read your config file
+vars:
+  - config/config.yaml
 stages:
 
 
@@ -35,7 +39,8 @@ stages:
       - src/vgg16classifier/utils/common.py
       - src/vgg16classifier/__init__.py
       - config/config.yaml
-      - artifacts/data_source/Binary_Classification
+      - ${training.training_data_dir}
+      - artifacts/prepare_callbacks
       - artifacts/prepare_base_model
     params:
       - IMAGE_SIZE
