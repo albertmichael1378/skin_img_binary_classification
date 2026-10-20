@@ -22,9 +22,11 @@ and cannot establish safety for diagnosis or care decisions.
   ground-truth and metadata CSVs. The CSV metadata sample includes a
   `lesion_id`; confirm identifier coverage and whether patient identifiers are
   available before choosing a grouping key.
-- The current training and evaluation code independently applies
-  `validation_split` to the same image directory. Evaluation is therefore not
-  an untouched test and may overlap with training samples.
+- Training applies `validation_split` to `Binary_Classification`, while
+  evaluation uses a separate legacy `skin-disease-images` directory and its
+  own validation split. Whether these folders overlap in image content or
+  provenance is unknown, so evaluation is not yet established as an untouched
+  independent test set.
 - The current DVC lockfile records the previous `skin-disease-images` input
   (630 files) and previous parameter values. It does not describe the current
   binary dataset/parameters.

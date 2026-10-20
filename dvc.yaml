@@ -5,6 +5,12 @@ stages:
     cmd: python src/vgg16classifier/pipeline/stage_02_prepare_base_model.py
     deps:
       - src/vgg16classifier/pipeline/stage_02_prepare_base_model.py
+      - src/vgg16classifier/components/prepare_base_model.py
+      - src/vgg16classifier/config/configuration.py
+      - src/vgg16classifier/entity/configaration_entities.py
+      - src/vgg16classifier/utils/common.py
+      - src/vgg16classifier/constants/__init__.py
+      - src/vgg16classifier/__init__.py
       - config/config.yaml
     params:
       - IMAGE_SIZE
@@ -25,6 +31,9 @@ stages:
       - src/vgg16classifier/components/training.py
       - src/vgg16classifier/components/run_metadata.py
       - src/vgg16classifier/config/configuration.py
+      - src/vgg16classifier/entity/configaration_entities.py
+      - src/vgg16classifier/utils/common.py
+      - src/vgg16classifier/__init__.py
       - config/config.yaml
       - artifacts/data_source/Binary_Classification
       - artifacts/prepare_base_model
@@ -33,6 +42,7 @@ stages:
       - EPOCHS
       - BATCH_SIZE
       - AUGMENTATION
+      - SEED
     outs:
       - artifacts/training/vgg16model.h5
       - artifacts/training/run_metadata.json
@@ -46,8 +56,12 @@ stages:
       - src/vgg16classifier/pipeline/stage_04_evaluation.py
       - src/vgg16classifier/components/evaluation.py
       - src/vgg16classifier/config/configuration.py
+      - src/vgg16classifier/entity/configaration_entities.py
+      - src/vgg16classifier/utils/common.py
+      - src/vgg16classifier/constants/__init__.py
+      - src/vgg16classifier/__init__.py
       - config/config.yaml
-      - artifacts/data_source/Binary_Classification
+      - artifacts/data_source/skin-disease-images
       - artifacts/training/vgg16model.h5
     params:
       - IMAGE_SIZE

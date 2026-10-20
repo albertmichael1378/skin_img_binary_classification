@@ -20,11 +20,18 @@ training images, ground-truth labels, and metadata.
 - The observed binary folders contain 8,473 `cancerous` and 16,858
   `non_cancerous` images. Confirm the source, label mapping, and license before
   treating these as an ISIC-derived dataset.
-- The current evaluation code resplits the same directory used for training;
-  its accuracy is not an independent test-set result.
+- Evaluation uses the separate legacy `skin-disease-images` directory and its
+  own validation split. Its independence from the training images is not
+  established, so its results should not be treated as a verified held-out
+  test result.
 - Training writes `artifacts/training/run_metadata.json` with the run status,
   dataset manifest fingerprint, class mapping/counts, configuration, software
   versions, training history, and model checksum.
+- GitHub Actions is currently CI-only: it checks out the repo and compiles
+  Python source/tests. AWS image publishing and deployment are disabled until
+  AWS is configured. The previous AWS workflow is archived as
+  `.github/workflows/main-aws-deployment.yaml.disabled`; GitHub does not run
+  that extension. The active workflow does not train the model.
 
 See [the ML improvement plan](docs/ML_IMPROVEMENT_PLAN.md) for the ordered
 work needed to make experiments trustworthy and [the production safety
@@ -76,6 +83,11 @@ python -m dvc status
 
 A DVC remote must be configured separately for `dvc pull`/`dvc push`; this
 repository does not include remote credentials.
+
+The current GitHub Actions workflow does not install DVC, fetch DVC-managed
+data/artifacts, or run the training pipeline. Training should be run separately
+on the configured local or Kaggle environment after its dataset and paths are
+set up.
 
 ## Running the pipeline
 
@@ -129,6 +141,15 @@ Use DVC-tracked data and its content hashes as the authoritative data version.
 The record is overwritten for each run because the model output path is also
 overwritten. Archive or version artifacts through DVC before a new run when
 history must be retained.
+
+Evaluation continues to use the separate legacy `skin-disease-images`
+directory, containing 380 `affected` and 250 `Healthy` images at last
+inspection. The validation split is not forced to equal class counts; equal
+counts are not required to calculate sensitivity or specificity. The saved
+metrics define `affected` as the positive class and report sensitivity and
+specificity at a 0.5 output threshold, along with confusion counts. The
+evaluation set's source, label mapping, overlap with training images, and
+representativeness still need verification.
 
 ## Improving the project
 

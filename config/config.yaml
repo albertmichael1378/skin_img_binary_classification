@@ -20,5 +20,4 @@ prepare_callbacks:
 training:
   root_dir: artifacts/training
   trained_model_path: artifacts/training/vgg16model.h5
-  metadata_path: artifacts/training/metadata
-
+  metadata_path: artifacts/training/run_metadata.json

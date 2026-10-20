@@ -146,3 +146,51 @@ changed during this session.
 - The split/leakage, VGG16 preprocessing, independent test evaluation, source
   label mapping, DVC lockfile refresh, and production API hardening remain
   unresolved.
+
+## 2026-10-19: Kaggle Training Preparation and AWS Workflow Pause
+
+### User-Approved Scope
+
+- Disable AWS deployment while the model is trained on Kaggle; preserve a
+  non-AWS GitHub Actions check.
+- Keep evaluation on the existing `skin-disease-images` dataset rather than
+  switching it to `Binary_Classification`.
+- Add sensitivity and specificity, with `affected` confirmed as the positive
+  class. Equal class counts are not required for these metrics.
+
+### Changes Applied
+
+- Replaced the AWS build/push/deploy workflow with a CI-only workflow that
+  checks out source and compiles Python source/tests. It does not install DVC
+  or train a model.
+- Updated DVC dependencies to include stage imports and the configured seed;
+  aligned the evaluation data dependency and metadata output with configured
+  paths.
+- Kept evaluation on the legacy folders, fixed its explicit folder ordering
+  (`affected` index 0, `Healthy` index 1), and added sensitivity, specificity,
+  and confusion counts at a 0.5 model-output threshold.
+- Documented that balanced evaluation counts are unnecessary, but dataset
+  independence and provenance still require validation.
+
+### Verification and Remaining Issues
+
+- DVC stage listing/DAG parse, and `dvc status` exits successfully; it reports
+  expected stale stages, artifacts, parameters, and lockfile changes. No DVC
+  remote is configured, so the Kaggle machine must receive its dataset by a
+  separate method unless a remote is added.
+- A DVC dry-run was interrupted after it began a long stage command; no model
+  training was intentionally run as validation. The previous DVC status check
+  succeeded after the interrupted process.
+- Six focused unit tests and Python compile checks passed.
+- `dvc.lock` must be regenerated after the chosen Kaggle data layout and the
+  validated stages are available. Evaluation data overlap with training is
+  still unknown; sensitivity/specificity do not solve that validity issue.
+
+## 2026-10-20: Archive AWS Workflow
+
+- Preserved the former ECR build and self-hosted `docker run` deployment
+  workflow in `.github/workflows/main-aws-deployment.yaml.disabled`.
+- GitHub Actions does not discover the `.yaml.disabled` extension. The active
+  `main.yaml` remains the CI-only workflow and does not use AWS credentials.
+- The archived workflow is retained for reference only; it still needs review
+  before any AWS deployment is re-enabled.
