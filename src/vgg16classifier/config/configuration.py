@@ -50,7 +50,7 @@ class ConfigurationManager:
         training = self.config.training
         prepare_base_model = self.config.prepare_base_model
         params = self.params
-        training_data =os.path.join(self.config.data_source.unzip_dir,"Binary_Classification")
+        training_data =self.config.training.training_data_dir
         create_directories([
             Path(training.root_dir)
         ])
