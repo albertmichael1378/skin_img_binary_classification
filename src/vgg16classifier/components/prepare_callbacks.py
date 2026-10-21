@@ -32,7 +32,7 @@ class PrepareCallback:
     def early_stopping_cb(self):
             return tf.keras.callbacks.EarlyStopping(
                 monitor='val_loss',
-                patience=3,
+                patience=10,
                 restore_best_weights=True
             )
 
