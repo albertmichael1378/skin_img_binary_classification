@@ -69,7 +69,7 @@ class ConfigurationManager:
             metadata_path= Path(training.metadata_path),
             trained_model_path=Path(training.trained_model_path),
             updated_base_model_path=Path(prepare_base_model.updated_base_model_path),
-            training_data=Path(DATA_PATH),
+            training_data_dir=Path(DATA_PATH),
             params_epochs=params.EPOCHS,
             params_batch_size=params.BATCH_SIZE,
             params_is_augmentation=params.AUGMENTATION,
