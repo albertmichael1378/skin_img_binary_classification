@@ -58,7 +58,7 @@ class ConfigurationManager:
 
         if "KAGGLE_KERNEL_RUN_TYPE" in os.environ:
             # Use Kaggle's read-only mounted dataset path
-            DATA_PATH = self.config.training.kaggle_data_dir
+            DATA_PATH = training_data
         else:
             # Use the local project path
             DATA_PATH = training_data

@@ -20,20 +20,6 @@ from pathlib import Path
 # ==========================================
 # 1. SET ENVIRONMENT BEFORE TENSORFLOW
 # ==========================================
-from vgg16classifier.utils.common import set_deterministic_environment
-set_deterministic_environment(seed=42)
-
-# ==========================================
-# 2. NOW IMPORT TENSORFLOW AND COMPONENTS
-# ==========================================
-import tensorflow as tf
-from vgg16classifier import logger
-from vgg16classifier.components.run_metadata import (
-    create_training_metadata,
-    finish_training_metadata,
-    write_run_metadata,
-)
-from vgg16classifier.entity.configaration_entities import TrainingConfig
 
 
 def get_balanced_class_weights(labels):
@@ -141,7 +127,7 @@ class Training:
         repo_root = Path(__file__).resolve().parents[3]
         # In configuration.py
         if "KAGGLE_KERNEL_RUN_TYPE" in os.environ:
-            self.train_dataset = Path(self.config.kaggle_data_dir)
+            self.train_dataset = Path(self.config.training_data_dir)
         else:
             self.train_dataset = Path(self.config.training_data_dir)
             
