@@ -51,6 +51,8 @@ stages:
     outs:
       - artifacts/training/vgg16model.h5
       - artifacts/training/run_metadata.json
+      - artifacts/training/vgg16model.keras
+      - artifacts/training/vgg16model.weights.h5
 
 
 
