@@ -137,7 +137,12 @@ class Training:
 
     def train(self, callback_list: list):
         repo_root = Path(__file__).resolve().parents[3]
-        
+        # In configuration.py
+        if "KAGGLE_KERNEL_RUN_TYPE" in os.environ:
+            self.train_dataset = Path(self.config.training.kaggle_data_dir)
+        else:
+            self.train_dataset = Path(self.config.training.training_data_dir)
+            
         
         # Calculate balanced weights
         class_weight_dict = get_balanced_class_weights(self.train_labels)
