@@ -134,6 +134,8 @@ class Training:
     @staticmethod
     def save_model(path: Path, model: tf.keras.Model):
         model.save(path)
+    def save_weights(self, path: Path, model: tf.keras.Model):
+        model.save_weights(path)
 
     def train(self, callback_list: list):
         repo_root = Path(__file__).resolve().parents[3]
@@ -193,10 +195,13 @@ class Training:
                 callbacks=callback_list,
                 class_weight=class_weight_dict,
             )
-            self.save_model(
-                path=self.config.trained_model_path,
-                model=self.model,
-            )
+            # Change the extension to match Keras 3 weight standards
+            weights_path = self.config.trained_model_path.replace(".keras", ".weights.h5")
+            self.model.save_weights(weights_path)
+            #self.save_model(
+                #path=self.config.trained_model_path,
+                #model=self.model,
+            #)
         except Exception as error:
             finish_training_metadata(
                 metadata,
