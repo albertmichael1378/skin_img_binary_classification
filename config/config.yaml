@@ -19,7 +19,7 @@ prepare_callbacks:
 
 training:
   root_dir: artifacts/training
-  training_data_dir: artifacts/data_source/Binary_Classification
+  training_data_dir: /artifacts/data_source/Binary_Classification
   kaggle_data_dir: /kaggle/working/binary_dataset
   trained_model_path: artifacts/training/vgg16model.h5
   metadata_path: artifacts/training/run_metadata.json
