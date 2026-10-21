@@ -13,7 +13,6 @@ from vgg16classifier.components.run_metadata import (
 )
 from vgg16classifier.entity.configaration_entities import TrainingConfig
 
-import os
 import numpy as np
 from pathlib import Path
 
@@ -50,7 +49,7 @@ class Training:
     def train_valid_generator(self):
         # 1. Load Validation Dataset
         self.valid_dataset = tf.keras.utils.image_dataset_from_directory(
-            directory=self.config.training_data,
+            directory=self.config.training_data_dir,
             validation_split=0.20,
             subset="validation",
             seed=self.config.SEED,
@@ -61,7 +60,7 @@ class Training:
 
         # 2. Load Training Dataset
         self.train_dataset = tf.keras.utils.image_dataset_from_directory(
-            directory=self.config.training_data,
+            directory=self.config.training_data_dir,
             validation_split=0.20,
             subset="training",
             seed=self.config.SEED,
@@ -125,13 +124,6 @@ class Training:
 
     def train(self, callback_list: list):
         repo_root = Path(__file__).resolve().parents[3]
-        # In configuration.py
-        if "KAGGLE_KERNEL_RUN_TYPE" in os.environ:
-            self.train_dataset = Path(self.config.training_data_dir)
-        else:
-            self.train_dataset = Path(self.config.training_data_dir)
-            
-        
         # Calculate balanced weights
         class_weight_dict = get_balanced_class_weights(self.train_labels)
         logger.info(f"Class weights: {class_weight_dict}")
@@ -139,7 +131,7 @@ class Training:
         # BUG FIX: Using exactly your configured metadata path
         metadata = create_training_metadata(
             repo_root=repo_root,
-            dataset_root=Path(self.config.training_data),
+            dataset_root=Path(self.config.training_data_dir),
             train_filenames=self.train_filepaths,
             train_labels=self.train_labels,
             validation_filenames=self.valid_filepaths,
@@ -182,12 +174,12 @@ class Training:
                 class_weight=class_weight_dict,
             )
             # Change the extension to match Keras 3 weight standards
-            weights_path = self.config.trained_model_path.replace(".keras", ".weights.h5")
-            self.model.save_weights(weights_path)
-            #self.save_model(
-                #path=self.config.trained_model_path,
-                #model=self.model,
-            #)
+            #weights_path = self.config.trained_model_path.replace(".keras", ".weights.h5")
+            #self.model.save_weights(weights_path)
+            self.save_model(
+                path=self.config.trained_model_path,
+                model=self.model,
+            )
         except Exception as error:
             finish_training_metadata(
                 metadata,
@@ -236,7 +228,7 @@ class Training_Old:
         )
 
         self.valid_generator = valid_datagenerator.flow_from_directory(
-            directory=self.config.training_data,
+            directory=self.config.training_data_dir,
             subset="validation",
             shuffle=False,
             class_mode='binary',
@@ -257,7 +249,7 @@ class Training_Old:
             train_datagenerator = valid_datagenerator
 
         self.train_generator = train_datagenerator.flow_from_directory(
-            directory=self.config.training_data,
+            directory=self.config.training_data_dir,
             subset="training",
             shuffle=True,
             class_mode='binary',
@@ -297,7 +289,7 @@ class Training_Old:
         class_indices = dict(self.train_generator.class_indices)
         metadata = create_training_metadata(
             repo_root=repo_root,
-            dataset_root=Path(self.config.training_data),
+            dataset_root=Path(self.config.training_data_dir),
             train_filenames=self.train_generator.filenames,
             train_labels=self.train_generator.classes,
             validation_filenames=self.valid_generator.filenames,
