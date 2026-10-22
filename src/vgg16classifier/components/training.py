@@ -334,6 +334,18 @@ class Training_Old:
         # INSTANT: No looping required
         labels = self.train_generator.classes
         try:
+            self.model.compile(
+            optimizer=tf.keras.optimizers.SGD(learning_rate=self.config.params_learning_rate),
+            loss=tf.keras.losses.BinaryCrossentropy(),
+            metrics=[
+                "accuracy",
+                tf.keras.metrics.Precision(),
+                tf.keras.metrics.Recall(),
+                tf.keras.metrics.AUC(name='auc'),
+                tf.keras.metrics.BinaryAccuracy()
+                 ]
+             )
+
             history = self.model.fit(
                 self.train_generator,
                 epochs=self.config.params_epochs,
