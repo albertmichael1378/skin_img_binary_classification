@@ -47,19 +47,6 @@ class PrepareBaseModel:
             outputs=x
         )
 
-        full_model.compile(
-            optimizer=tf.keras.optimizers.SGD(learning_rate=learning_rate),
-            loss=tf.keras.losses.BinaryCrossentropy(),
-            metrics=["accuracy",tf.keras.metrics.Precision(),
-            tf.keras.metrics.Recall(),
-            tf.keras.metrics.AUC(name='auc'),  # Area under the ROC curve
-            tf.keras.metrics.BinaryAccuracy(),  # Binary accuracy
-        # You can add more metrics as needed
-    ]
-            
-
-        )
-
         full_model.summary()
         return full_model
 
