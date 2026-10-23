@@ -45,6 +45,17 @@ class Training:
         self.model = tf.keras.models.load_model(
             self.config.updated_base_model_path
         )
+        self.model.compile(
+            optimizer=tf.keras.optimizers.SGD(learning_rate=self.config.params_learning_rate),
+            loss=tf.keras.losses.BinaryCrossentropy(),
+            metrics=[
+                "accuracy",
+                tf.keras.metrics.Precision(),
+                tf.keras.metrics.Recall(),
+                tf.keras.metrics.AUC(name='auc'),
+                tf.keras.metrics.BinaryAccuracy()
+            ]
+        )
 
     def train_valid_generator(self):
         # 1. Load Validation Dataset
