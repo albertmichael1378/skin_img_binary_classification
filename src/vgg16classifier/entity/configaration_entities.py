@@ -30,6 +30,7 @@ class TrainingConfig:
     params_batch_size: int
     params_is_augmentation: bool
     params_image_size: list
+    params_learning_rate: float
 @dataclass(frozen=True)
 class EvaluationConfigs:
     path_of_model: Path
