@@ -13,10 +13,21 @@ class PrepareBaseModel:
 
     def get_base_model(self):
         inputs = tf.keras.Input(shape=self.config.params_image_size)
+        x = inputs
+        if self.config.params_is_augmentation:
+            x = tf.keras.Sequential(
+                [
+                    tf.keras.layers.RandomFlip("horizontal_and_vertical"),
+                    tf.keras.layers.RandomRotation(15 / 360),
+                    tf.keras.layers.RandomZoom(0.1),
+                    tf.keras.layers.RandomContrast(0.1),
+                ],
+                name="augmentation",
+            )(x)
         preprocessed_inputs = tf.keras.layers.Lambda(
             tf.keras.applications.vgg16.preprocess_input,
             name="vgg16_preprocess",
-        )(inputs)
+        )(x)
         self.model = tf.keras.applications.vgg16.VGG16(
             input_shape=self.config.params_image_size,
             weights=self.config.params_weights,
@@ -34,11 +45,14 @@ class PrepareBaseModel:
         elif (freeze_till is not None) and (freeze_till > 0):
             for layer in model.layers[:-freeze_till]:
                 layer.trainable = False
-        x = tf.keras.layers.GlobalAveragePooling2D(name="head_global_average_pooling")(
-            model.output
-        )
+        x = tf.keras.layers.GlobalAveragePooling2D(
+            name="head_global_average_pooling"
+        )(model.output)
         x = tf.keras.layers.Dense(
-            units=256, activation="relu", name="head_dense"
+            units=256,
+            activation="relu",
+            kernel_regularizer=tf.keras.regularizers.l2(1e-4),
+            name="head_dense",
         )(x)
         x = tf.keras.layers.Dropout(rate=0.5, name="head_dropout")(x)
         if classes == 2:

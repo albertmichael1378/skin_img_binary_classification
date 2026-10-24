@@ -5,6 +5,7 @@ set_deterministic_environment(seed=42)
 import tensorflow as tf
 from pathlib import Path
 import numpy as np
+from typing import Callable
 from vgg16classifier import logger
 from vgg16classifier.components.run_metadata import (
     create_training_metadata,
@@ -43,7 +44,12 @@ class Training:
 
     def get_base_model(self):
         self.model = tf.keras.models.load_model(
-            self.config.updated_base_model_path
+            self.config.updated_base_model_path,
+            custom_objects={
+                "preprocess_input": (
+                    tf.keras.applications.vgg16.preprocess_input
+                )
+            },
         )
         self._compile_model(self.config.params_learning_rate)
 
@@ -110,22 +116,7 @@ class Training:
             for path in self.valid_filepaths
         ]
 
-        # 3. Apply Data Augmentation
-        if self.config.params_is_augmentation:
-            data_augmentation = tf.keras.Sequential([
-                tf.keras.layers.RandomFlip("horizontal"),
-                tf.keras.layers.RandomRotation(factor=40/360),
-                tf.keras.layers.RandomTranslation(height_factor=0.2, width_factor=0.2),
-                tf.keras.layers.RandomZoom(height_factor=0.2, width_factor=0.2)
-            ])
-            
-            # Apply augmentation only to training data
-            self.train_dataset = self.train_dataset.map(
-                lambda x, y: (data_augmentation(x, training=True), y),
-                num_parallel_calls=tf.data.AUTOTUNE
-            )
-
-        # 4. Prefetching for GPU optimization
+        # Augmentation is part of the model and active only during training.
         self.train_dataset = self.train_dataset.prefetch(buffer_size=tf.data.AUTOTUNE)
         self.valid_dataset = self.valid_dataset.prefetch(buffer_size=tf.data.AUTOTUNE)
 
@@ -135,7 +126,12 @@ class Training:
     def save_weights(self, path: Path, model: tf.keras.Model):
         model.save_weights(path)
 
-    def train(self, callback_list: list):
+    def train(
+        self,
+        callback_factory: Callable[
+            [str], list[tf.keras.callbacks.Callback]
+        ],
+    ):
         repo_root = Path(__file__).resolve().parents[3]
         # Calculate balanced weights
         class_weight_dict = get_balanced_class_weights(self.train_labels)
@@ -160,6 +156,16 @@ class Training:
                 ),
                 "batch_size": self.config.params_batch_size,
                 "augmentation": self.config.params_is_augmentation,
+                "augmentation_config": (
+                    {
+                        "random_flip": "horizontal_and_vertical",
+                        "random_rotation_factor": 15 / 360,
+                        "random_zoom_factor": 0.1,
+                        "random_contrast_factor": 0.1,
+                    }
+                    if self.config.params_is_augmentation
+                    else None
+                ),
                 "image_size": list(self.config.params_image_size),
                 "validation_split": 0.20,
                 "fine_tune_epochs": self.config.params_fine_tune_epochs,
@@ -185,11 +191,12 @@ class Training:
         write_run_metadata(self.config.metadata_path, metadata)
 
         try:
+            head_callbacks = callback_factory("head")
             head_history = self.model.fit(
                 self.train_dataset,
                 epochs=self.config.params_epochs,
                 validation_data=self.valid_dataset,
-                callbacks=callback_list,
+                callbacks=head_callbacks,
                 class_weight=class_weight_dict,
             )
 
@@ -197,7 +204,7 @@ class Training:
             if self.config.params_fine_tune_epochs > 0:
                 completed_head_epochs = len(head_history.epoch)
                 fine_tune_layers = []
-                trainable_head_layers = {
+                head_layer_names = {
                     "head_dense",
                     "head_dropout",
                     "classifier",
@@ -205,7 +212,7 @@ class Training:
                 for layer in self.model.layers:
                     layer.trainable = (
                         layer.name.startswith("block5_")
-                        or layer.name in trainable_head_layers
+                        or layer.name in head_layer_names
                     )
                     if layer.name.startswith("block5_") and layer.trainable:
                         fine_tune_layers.append(layer.name)
@@ -216,6 +223,7 @@ class Training:
                     )
 
                 self._compile_model(self.config.params_fine_tune_learning_rate)
+                fine_tune_callbacks = callback_factory("fine_tune")
                 fine_tune_history = self.model.fit(
                     self.train_dataset,
                     initial_epoch=completed_head_epochs,
@@ -223,7 +231,7 @@ class Training:
                         completed_head_epochs + self.config.params_fine_tune_epochs
                     ),
                     validation_data=self.valid_dataset,
-                    callbacks=callback_list,
+                    callbacks=fine_tune_callbacks,
                     class_weight=class_weight_dict,
                 )
                 history = {

@@ -32,6 +32,11 @@ training images, ground-truth labels, and metadata.
   head. Training first fits the head with the pretrained backbone frozen, then
   fine-tunes VGG16 block 5 at a lower learning rate. This makes training,
   evaluation, and prediction use the same input preprocessing.
+- Optional model-integrated augmentation (horizontal/vertical flips, up to 15°
+  rotation, 10% zoom, and 10% contrast) is active during training and disabled
+  automatically for evaluation and prediction. Each training phase creates
+  fresh callbacks and a phase-specific best checkpoint, monitoring validation
+  AUC.
 - GitHub Actions is currently CI-only: it checks out the repo and compiles
   Python source/tests. AWS image publishing and deployment are disabled until
   AWS is configured. The previous AWS workflow is archived as
