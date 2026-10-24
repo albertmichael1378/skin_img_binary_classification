@@ -57,7 +57,7 @@ class Evaluation:
             validation_split=0.30
         )
         self.valid_generator = datagenerator.flow_from_directory(
-            directory=self.config.Evaluation_dir,
+            directory=self.config.training_data,
             classes=self.CLASS_ORDER,
             subset="validation",
             shuffle=False,

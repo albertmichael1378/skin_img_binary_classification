@@ -50,18 +50,9 @@ class ConfigurationManager:
         training = self.config.training
         prepare_base_model = self.config.prepare_base_model
         params = self.params
-        training_data =training.training_data_dir
         create_directories([
             Path(training.root_dir)
         ])
-        import os
-
-        if "KAGGLE_KERNEL_RUN_TYPE" in os.environ:
-            # Use Kaggle's read-only mounted dataset path
-            DATA_PATH = training_data
-        else:
-            # Use the local project path
-            DATA_PATH = training_data
 
         training_config = TrainingConfig(
             SEED=self.params.SEED,
@@ -69,20 +60,21 @@ class ConfigurationManager:
             metadata_path= Path(training.metadata_path),
             trained_model_path=Path(training.trained_model_path),
             updated_base_model_path=Path(prepare_base_model.updated_base_model_path),
-            training_data_dir=Path(DATA_PATH),
+            training_data_dir=Path(training.training_data_dir),
             params_epochs=params.EPOCHS,
+            params_fine_tune_epochs=params.FINE_TUNE_EPOCHS,
             params_batch_size=params.BATCH_SIZE,
             params_is_augmentation=params.AUGMENTATION,
             params_image_size=params.IMAGE_SIZE,
-            params_learning_rate=params.LEARNING_RATE
+            params_learning_rate=params.LEARNING_RATE,
+            params_fine_tune_learning_rate=params.FINE_TUNE_LEARNING_RATE,
         )
 
         return training_config
     def get_validation_config(self) -> EvaluationConfigs:
         eval_config = EvaluationConfigs(
             path_of_model=Path("artifacts/training/vgg16model.h5"),
-            training_data=Path("artifacts/data_source/Binary_Classification"),
-            Evaluation_dir=Path("artifacts/data_source/skin-disease-images"),
+            training_data=Path("artifacts/data_source/skin-disease-images"),
             all_params=self.params,
             params_image_size=self.params.IMAGE_SIZE,
             params_batch_size=self.params.BATCH_SIZE

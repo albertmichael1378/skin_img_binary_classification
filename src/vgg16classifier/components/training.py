@@ -45,18 +45,20 @@ class Training:
         self.model = tf.keras.models.load_model(
             self.config.updated_base_model_path
         )
+        self._compile_model(self.config.params_learning_rate)
+
+    def _compile_model(self, learning_rate: float) -> None:
         self.model.compile(
-            optimizer=tf.keras.optimizers.SGD(learning_rate=self.config.params_learning_rate),
+            optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
             loss=tf.keras.losses.BinaryCrossentropy(),
             metrics=[
-                "accuracy",
-                tf.keras.metrics.Precision(),
-                tf.keras.metrics.Recall(),
-                tf.keras.metrics.AUC(name='auc'),
-                tf.keras.metrics.BinaryAccuracy()
-            ]
+                tf.keras.metrics.BinaryAccuracy(name="accuracy"),
+                tf.keras.metrics.Precision(name="precision"),
+                tf.keras.metrics.Recall(name="recall"),
+                tf.keras.metrics.AUC(name="auc"),
+                tf.keras.metrics.AUC(name="pr_auc", curve="PR"),
+            ],
         )
-
     def train_valid_generator(self):
         # 1. Load Validation Dataset
         self.valid_dataset = tf.keras.utils.image_dataset_from_directory(
@@ -152,10 +154,16 @@ class Training:
                 "class_weight": class_weight_dict,
                 "SEED": self.config.SEED,
                 "epochs": self.config.params_epochs,
+                "total_epochs": (
+                    self.config.params_epochs
+                    + self.config.params_fine_tune_epochs
+                ),
                 "batch_size": self.config.params_batch_size,
                 "augmentation": self.config.params_is_augmentation,
                 "image_size": list(self.config.params_image_size),
                 "validation_split": 0.20,
+                "fine_tune_epochs": self.config.params_fine_tune_epochs,
+                "fine_tune_learning_rate": self.config.params_fine_tune_learning_rate,
                 "learning_rate": float(
                     tf.keras.backend.get_value(self.model.optimizer.learning_rate)
                 ),
@@ -163,8 +171,8 @@ class Training:
             preprocessing={
                 "target_size": list(self.config.params_image_size[:-1]),
                 "color_mode": "rgb",
-                "rescale": None, 
-                "vgg16_preprocess_input": False,
+                "rescale": None,
+                "vgg16_preprocess_input": True,
             },
             optimizer=(
                 type(self.model.optimizer).__name__
@@ -177,13 +185,56 @@ class Training:
         write_run_metadata(self.config.metadata_path, metadata)
 
         try:
-            history = self.model.fit(
+            head_history = self.model.fit(
                 self.train_dataset,
                 epochs=self.config.params_epochs,
                 validation_data=self.valid_dataset,
                 callbacks=callback_list,
                 class_weight=class_weight_dict,
             )
+
+            history = head_history.history
+            if self.config.params_fine_tune_epochs > 0:
+                completed_head_epochs = len(head_history.epoch)
+                fine_tune_layers = []
+                trainable_head_layers = {
+                    "head_dense",
+                    "head_dropout",
+                    "classifier",
+                }
+                for layer in self.model.layers:
+                    layer.trainable = (
+                        layer.name.startswith("block5_")
+                        or layer.name in trainable_head_layers
+                    )
+                    if layer.name.startswith("block5_") and layer.trainable:
+                        fine_tune_layers.append(layer.name)
+
+                if not fine_tune_layers:
+                    raise ValueError(
+                        "VGG16 block5 layers were not found for fine-tuning"
+                    )
+
+                self._compile_model(self.config.params_fine_tune_learning_rate)
+                fine_tune_history = self.model.fit(
+                    self.train_dataset,
+                    initial_epoch=completed_head_epochs,
+                    epochs=(
+                        completed_head_epochs + self.config.params_fine_tune_epochs
+                    ),
+                    validation_data=self.valid_dataset,
+                    callbacks=callback_list,
+                    class_weight=class_weight_dict,
+                )
+                history = {
+                    name: head_history.history[name]
+                    + fine_tune_history.history[name]
+                    for name in head_history.history
+                }
+                metadata["training"]["parameters"]["fine_tuned_layers"] = (
+                    fine_tune_layers
+                )
+
             # Change the extension to match Keras 3 weight standards
             #weights_path = self.config.trained_model_path.replace(".keras", ".weights.h5")
             #self.model.save_weights(weights_path)
@@ -206,7 +257,7 @@ class Training:
         finish_training_metadata(
             metadata,
             status="completed",
-            history=history.history,
+            history=history,
             model_path=Path(self.config.trained_model_path),
         )
         write_run_metadata(self.config.metadata_path, metadata)

@@ -27,6 +27,11 @@ training images, ground-truth labels, and metadata.
 - Training writes `artifacts/training/run_metadata.json` with the run status,
   dataset manifest fingerprint, class mapping/counts, configuration, software
   versions, training history, and model checksum.
+- The VGG16 model applies ImageNet preprocessing internally and uses a
+  `GlobalAveragePooling2D → Dense(256) → Dropout(0.5) → Dense` classification
+  head. Training first fits the head with the pretrained backbone frozen, then
+  fine-tunes VGG16 block 5 at a lower learning rate. This makes training,
+  evaluation, and prediction use the same input preprocessing.
 - GitHub Actions is currently CI-only: it checks out the repo and compiles
   Python source/tests. AWS image publishing and deployment are disabled until
   AWS is configured. The previous AWS workflow is archived as

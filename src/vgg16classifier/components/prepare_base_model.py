@@ -12,30 +12,44 @@ class PrepareBaseModel:
         self.config = config
 
     def get_base_model(self):
-        
+        inputs = tf.keras.Input(shape=self.config.params_image_size)
+        preprocessed_inputs = tf.keras.layers.Lambda(
+            tf.keras.applications.vgg16.preprocess_input,
+            name="vgg16_preprocess",
+        )(inputs)
         self.model = tf.keras.applications.vgg16.VGG16(
             input_shape=self.config.params_image_size,
             weights=self.config.params_weights,
-            include_top=self.config.params_include_top
+            include_top=self.config.params_include_top,
+            input_tensor=preprocessed_inputs,
         )
 
         self.save_model(path=self.config.base_model_path, model=self.model)
 
     @staticmethod
-    def _prepare_full_model(model, classes, freeze_all, freeze_till, learning_rate):
+    def _prepare_full_model(model, classes, freeze_all, freeze_till):
         if freeze_all:
             for layer in model.layers:
                 layer.trainable = False
         elif (freeze_till is not None) and (freeze_till > 0):
             for layer in model.layers[:-freeze_till]:
                 layer.trainable = False
-        x=model.output
-        x = tf.keras.layers.Flatten()(x)
+        x = tf.keras.layers.GlobalAveragePooling2D(name="head_global_average_pooling")(
+            model.output
+        )
+        x = tf.keras.layers.Dense(
+            units=256, activation="relu", name="head_dense"
+        )(x)
+        x = tf.keras.layers.Dropout(rate=0.5, name="head_dropout")(x)
         if classes == 2:
-            x = tf.keras.layers.Dense(units=1, activation='sigmoid')(x)
+            x = tf.keras.layers.Dense(
+                units=1, activation='sigmoid', name="classifier"
+            )(x)
         else:
             # If you ever change to multi-class, it automatically switches to softmax
-            x = tf.keras.layers.Dense(units=classes, activation='softmax')(x)
+            x = tf.keras.layers.Dense(
+                units=classes, activation='softmax', name="classifier"
+            )(x)
         # prediction = tf.keras.layers.Dense(
         #     units=classes,
         #     activation="sigmoid"
@@ -56,7 +70,6 @@ class PrepareBaseModel:
             classes=self.config.params_classes,
             freeze_all=True,
             freeze_till=None,
-            learning_rate=self.config.params_learning_rate
         )
 
         self.save_model(path=self.config.updated_base_model_path, model=self.full_model)
@@ -82,6 +95,3 @@ def get_balanced_class_weights(labels):
             class_weights[class_id] = total_samples / (num_classes * count)
             
     return class_weights
-
-
-

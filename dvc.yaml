@@ -45,9 +45,12 @@ stages:
     params:
       - IMAGE_SIZE
       - EPOCHS
+      - FINE_TUNE_EPOCHS
       - BATCH_SIZE
       - AUGMENTATION
       - SEED
+      - LEARNING_RATE
+      - FINE_TUNE_LEARNING_RATE
     outs:
       - artifacts/training/vgg16model.h5
       - artifacts/training/run_metadata.json
