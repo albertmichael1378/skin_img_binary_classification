@@ -75,8 +75,10 @@ Desktop.ini
 /artifacts/training/*.h5
 /artifacts/training/*.keras
 /artifacts/training/*.weights.h5
+# Legacy metadata file from runs before timestamped metadata directories.
 /artifacts/training/run_metadata.json
 /artifacts/training/run_metadata.json.tmp
+/artifacts/training/run_metadata/
 /artifacts/training/checkpoints/
 /artifacts/training/tensorboard/
 

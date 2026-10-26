@@ -10,9 +10,11 @@ from vgg16classifier import logger
 from vgg16classifier.components.run_metadata import (
     create_training_metadata,
     finish_training_metadata,
+    run_metadata_path,
     write_run_metadata,
 )
 from vgg16classifier.entity.configaration_entities import TrainingConfig
+from vgg16classifier.components.prepare_base_model import VGG16Preprocessing
 
 import numpy as np
 from pathlib import Path
@@ -48,7 +50,8 @@ class Training:
             custom_objects={
                 "preprocess_input": (
                     tf.keras.applications.vgg16.preprocess_input
-                )
+                ),
+                "VGG16Preprocessing": VGG16Preprocessing,
             },
         )
         self._compile_model(self.config.params_learning_rate)
@@ -132,12 +135,45 @@ class Training:
             [str], list[tf.keras.callbacks.Callback]
         ],
     ):
+        best_checkpoints: list[tuple[str, float, Path]] = []
+
+        def record_best_checkpoint(
+            phase: str,
+            history: tf.keras.callbacks.History,
+            callbacks: list[tf.keras.callbacks.Callback],
+        ) -> None:
+            validation_auc = history.history.get("val_auc", [])
+            valid_auc = [
+                float(score) for score in validation_auc if np.isfinite(score)
+            ]
+            if not valid_auc:
+                raise RuntimeError(
+                    f"Training phase {phase!r} produced no finite val_auc values"
+                )
+
+            checkpoint_callbacks = [
+                callback
+                for callback in callbacks
+                if isinstance(callback, tf.keras.callbacks.ModelCheckpoint)
+            ]
+            if len(checkpoint_callbacks) != 1:
+                raise RuntimeError(
+                    f"Expected one ModelCheckpoint for phase {phase!r}, "
+                    f"found {len(checkpoint_callbacks)}"
+                )
+            checkpoint_path = Path(checkpoint_callbacks[0].filepath)
+            if not checkpoint_path.is_file():
+                raise FileNotFoundError(
+                    f"Best checkpoint for phase {phase!r} was not saved: "
+                    f"{checkpoint_path}"
+                )
+            best_checkpoints.append((phase, max(valid_auc), checkpoint_path))
+
         repo_root = Path(__file__).resolve().parents[3]
         # Calculate balanced weights
         class_weight_dict = get_balanced_class_weights(self.train_labels)
         logger.info(f"Class weights: {class_weight_dict}")
 
-        # BUG FIX: Using exactly your configured metadata path
         metadata = create_training_metadata(
             repo_root=repo_root,
             dataset_root=Path(self.config.training_data_dir),
@@ -169,7 +205,11 @@ class Training:
                 "image_size": list(self.config.params_image_size),
                 "validation_split": 0.20,
                 "fine_tune_epochs": self.config.params_fine_tune_epochs,
+                "fine_tune_layers": list(self.config.params_fine_tune_layers),
                 "fine_tune_learning_rate": self.config.params_fine_tune_learning_rate,
+                "head_dropout_rate": self.config.params_head_dropout_rate,
+                "head_l2_strength": self.config.params_head_l2_strength,
+                "early_stopping_patience": self.config.params_early_stopping_patience,
                 "learning_rate": float(
                     tf.keras.backend.get_value(self.model.optimizer.learning_rate)
                 ),
@@ -188,7 +228,9 @@ class Training:
             loss=str(self.model.loss),
             model_path=Path(self.config.trained_model_path),
         )
-        write_run_metadata(self.config.metadata_path, metadata)
+        # Keep every run in its own UTC-timestamped metadata file.
+        metadata_path = run_metadata_path(self.config.metadata_dir, metadata)
+        write_run_metadata(metadata_path, metadata)
 
         try:
             head_callbacks = callback_factory("head")
@@ -199,27 +241,37 @@ class Training:
                 callbacks=head_callbacks,
                 class_weight=class_weight_dict,
             )
+            record_best_checkpoint("head", head_history, head_callbacks)
 
             history = head_history.history
             if self.config.params_fine_tune_epochs > 0:
                 completed_head_epochs = len(head_history.epoch)
-                fine_tune_layers = []
+                configured_fine_tune_layers = set(
+                    self.config.params_fine_tune_layers
+                )
+                if not configured_fine_tune_layers:
+                    raise ValueError(
+                        "At least one fine-tune layer must be configured when "
+                        "fine-tuning is enabled"
+                    )
                 head_layer_names = {
                     "head_dense",
                     "head_dropout",
                     "classifier",
                 }
+                available_layer_names = {
+                    layer.name for layer in self.model.layers
+                }
+                missing_layers = configured_fine_tune_layers - available_layer_names
+                if missing_layers:
+                    raise ValueError(
+                        "Configured fine-tune layers were not found in the model: "
+                        f"{sorted(missing_layers)}"
+                    )
                 for layer in self.model.layers:
                     layer.trainable = (
-                        layer.name.startswith("block5_")
+                        layer.name in configured_fine_tune_layers
                         or layer.name in head_layer_names
-                    )
-                    if layer.name.startswith("block5_") and layer.trainable:
-                        fine_tune_layers.append(layer.name)
-
-                if not fine_tune_layers:
-                    raise ValueError(
-                        "VGG16 block5 layers were not found for fine-tuning"
                     )
 
                 self._compile_model(self.config.params_fine_tune_learning_rate)
@@ -234,18 +286,49 @@ class Training:
                     callbacks=fine_tune_callbacks,
                     class_weight=class_weight_dict,
                 )
+                record_best_checkpoint(
+                    "fine_tune",
+                    fine_tune_history,
+                    fine_tune_callbacks,
+                )
                 history = {
                     name: head_history.history[name]
                     + fine_tune_history.history[name]
                     for name in head_history.history
                 }
-                metadata["training"]["parameters"]["fine_tuned_layers"] = (
-                    fine_tune_layers
+                metadata["training"]["parameters"]["fine_tuned_layers"] = sorted(
+                    configured_fine_tune_layers
                 )
 
-            # Change the extension to match Keras 3 weight standards
-            #weights_path = self.config.trained_model_path.replace(".keras", ".weights.h5")
-            #self.model.save_weights(weights_path)
+            selected_phase, selected_auc, selected_checkpoint = max(
+                best_checkpoints,
+                key=lambda candidate: candidate[1],
+            )
+            logger.info(
+                "Selecting %s checkpoint with validation AUC %.6f from %s",
+                selected_phase,
+                selected_auc,
+                selected_checkpoint,
+            )
+            self.model = tf.keras.models.load_model(
+                selected_checkpoint,
+                custom_objects={
+                    "preprocess_input": (
+                        tf.keras.applications.vgg16.preprocess_input
+                    ),
+                    "VGG16Preprocessing": VGG16Preprocessing,
+                },
+                compile=False,
+            )
+            metadata["training"]["parameters"]["best_validation_auc_by_phase"] = {
+                phase: score for phase, score, _ in best_checkpoints
+            }
+            metadata["training"]["parameters"]["selected_checkpoint_phase"] = (
+                selected_phase
+            )
+            metadata["training"]["parameters"]["selected_checkpoint_val_auc"] = (
+                selected_auc
+            )
             self.save_model(
                 path=self.config.trained_model_path,
                 model=self.model,
@@ -257,7 +340,7 @@ class Training:
                 error=error,
             )
             try:
-                write_run_metadata(self.config.metadata_path, metadata)
+                write_run_metadata(metadata_path, metadata)
             except OSError:
                 logger.exception("Could not persist failed training-run metadata")
             raise
@@ -268,7 +351,7 @@ class Training:
             history=history,
             model_path=Path(self.config.trained_model_path),
         )
-        write_run_metadata(self.config.metadata_path, metadata)
+        write_run_metadata(metadata_path, metadata)
 
 ########New optimized code for speed on GPU using tf.data.Dataset and avoiding loops for class weight calculation.
 
@@ -278,7 +361,10 @@ class Training_Old:
 
     def get_base_model(self):
         self.model = tf.keras.models.load_model(
-            self.config.updated_base_model_path
+            self.config.updated_base_model_path,
+            custom_objects={
+                "VGG16Preprocessing": VGG16Preprocessing,
+            },
         )
 
     def train_valid_generator(self):
@@ -353,9 +439,6 @@ class Training_Old:
             raise ValueError("Training and validation class mappings do not match")
 
         repo_root = Path(__file__).resolve().parents[3]
-        metadata_path = Path(self.config.trained_model_path).with_name(
-            "run_metadata.json"
-        )
         class_indices = dict(self.train_generator.class_indices)
         metadata = create_training_metadata(
             repo_root=repo_root,
@@ -391,7 +474,8 @@ class Training_Old:
             loss=str(self.model.loss),
             model_path=Path(self.config.trained_model_path),
         )
-        write_run_metadata(self.config.metadata_path, metadata)
+        metadata_path = run_metadata_path(self.config.metadata_dir, metadata)
+        write_run_metadata(metadata_path, metadata)
         # 1. Extract labels from the tf.data.Dataset
         # (Assuming your dataset is named 'train_dataset')
         train_labels = np.concatenate([y.numpy() for x, y in self.train_generator], axis=0)
@@ -434,7 +518,7 @@ class Training_Old:
                 error=error,
             )
             try:
-                write_run_metadata(self.config.metadata_path, metadata)
+                write_run_metadata(metadata_path, metadata)
             except OSError:
                 logger.exception("Could not persist failed training-run metadata")
             raise
@@ -445,4 +529,4 @@ class Training_Old:
             history=history.history,
             model_path=Path(self.config.trained_model_path),
         )
-        write_run_metadata(self.config.metadata_path, metadata)
+        write_run_metadata(metadata_path, metadata)

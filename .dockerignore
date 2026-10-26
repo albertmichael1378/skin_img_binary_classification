@@ -22,4 +22,4 @@ artifacts/data_source/
 artifacts/prepare_base_model/
 artifacts/prepare_callbacks/
 artifacts/training/*
-!artifacts/training/vgg16model.h5
+!artifacts/training/vgg16model.keras

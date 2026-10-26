@@ -105,6 +105,25 @@ from a test manifest that was not used for fitting or tuning.
 **Exit gate:** A comparison report includes the same untouched test protocol
 for every candidate and an explicit model-selection rationale.
 
+### Conservative VGG16 regularization trial
+
+The next VGG16 training run is configured as a single conservative trial:
+
+- head learning rate `1e-4`, fine-tuning learning rate `3e-6`;
+- fine-tune only `block5_conv3`, leaving the earlier VGG16 blocks frozen;
+- head dropout `0.6` and dense-kernel L2 strength `5e-4`;
+- retain the existing moderate flip, rotation, zoom, and contrast augmentation;
+- retain the 30-epoch head and 15-epoch fine-tune limits, with early-stopping
+  patience increased to 7 epochs.
+
+Training now saves the best `val_auc` checkpoint from each phase and exports
+whichever phase has the higher validation AUC. The chosen phase and validation
+scores are written to that run's metadata. These values are a testable starting
+point, not evidence that overfitting is the only cause of poor performance or
+that this configuration improves generalization. Compare it against the prior
+configuration using identical patient/lesion-grouped splits and multiple seeds;
+do not select settings or thresholds using the final test set.
+
 ### P4 — Reproducibility and release metadata
 
 For each run, retain:
@@ -116,13 +135,14 @@ For each run, retain:
 - Python/TensorFlow/DVC versions, model checksum, and evaluation metrics;
 - decision threshold and the validation-only rationale for it.
 
-The training stage now writes
-`artifacts/training/run_metadata.json` using
+The training stage now writes a UTC-timestamped metadata record under
+`artifacts/training/run_metadata/` using
 [`metadata/run_metadata.schema.json`](../metadata/run_metadata.schema.json).
 Its path+size fingerprint detects many inventory changes but is not a content
-hash. DVC content hashes and versioned split manifests remain authoritative.
-Because this prototype writes a fixed model path, archive/version the outputs
-before another run if prior metadata must be retained.
+hash. The metadata directory is a DVC output and ignored by Git; commit the
+corresponding `dvc.lock` and push the DVC cache to a remote to preserve and
+restore historical records. DVC content hashes and versioned split manifests
+remain authoritative.
 
 **Exit gate:** A clean checkout with the documented data version can reproduce
 the selected run and trace its model to code, data, parameters, and metrics.

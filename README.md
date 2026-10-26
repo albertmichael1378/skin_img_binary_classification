@@ -24,7 +24,8 @@ training images, ground-truth labels, and metadata.
   own validation split. Its independence from the training images is not
   established, so its results should not be treated as a verified held-out
   test result.
-- Training writes `artifacts/training/run_metadata.json` with the run status,
+- Training writes a UTC-timestamped JSON file under
+  `artifacts/training/run_metadata/` with the run status,
   dataset manifest fingerprint, class mapping/counts, configuration, software
   versions, training history, and model checksum.
 - The VGG16 model applies ImageNet preprocessing internally and uses a
@@ -112,11 +113,24 @@ python -m dvc repro
 python -m dvc status
 ```
 
-Training metadata is written to
-`artifacts/training/run_metadata.json`. The DVC lockfile should be regenerated
-only after the stage dependencies, output paths, and evaluation protocol are
+Training metadata is written as timestamped JSON files under
+`artifacts/training/run_metadata/`. The DVC lockfile should be regenerated only
+after the stage dependencies, output paths, and evaluation protocol are
 correct. The current lockfile is not evidence that the present dataset or
 parameters produced the checked-in model.
+
+To run only reconstruction and evaluation from the configured ZIP archive,
+activate the project environment and run:
+
+```powershell
+python src/vgg16classifier/pipeline/stage_04_evaluation.py
+```
+
+This stage reconstructs the configured architecture, restores the archived
+weights into `evaluation.reconstructed_model_path`, and then evaluates that
+model. It does not install or upgrade Keras. The existing
+`reconstruct_and_evaluate` module remains available when you need to override
+the configured archive or output path.
 
 ## Current binary label contract
 
@@ -140,26 +154,68 @@ to avoid leakage.
 
 ## Experiment and model metadata
 
-Each training attempt writes a versioned JSON record to
-`artifacts/training/run_metadata.json`, including failures where metadata can
-be persisted. The record follows
+Each training attempt writes a uniquely named JSON record, for example
+`artifacts/training/run_metadata/run_metadata_20261026T063015123456Z_12345678.json`.
+The UTC timestamp and short run ID keep records distinct, including failed runs
+where metadata can be persisted. The record follows
 [`metadata/run_metadata.schema.json`](metadata/run_metadata.schema.json).
 The dataset fingerprint hashes sorted relative file paths and file sizes; it is
 a fast inventory fingerprint, **not** a cryptographic hash of every image.
 Use DVC-tracked data and its content hashes as the authoritative data version.
 
-The record is overwritten for each run because the model output path is also
-overwritten. Archive or version artifacts through DVC before a new run when
-history must be retained.
+The generated metadata directory is ignored by Git but declared as a DVC
+training output. This keeps run records out of source commits while allowing
+DVC to version and restore them: commit the updated `dvc.lock`, configure a DVC
+remote, and run `dvc push` to retain artifacts remotely. To retrieve the files
+for a committed experiment later, check out that Git revision and run
+`dvc pull`; the JSON files will be restored under the directory above. Without
+a configured remote and pushed DVC cache, ignored files remain only on the
+machine where training ran.
 
-Evaluation continues to use the separate legacy `skin-disease-images`
-directory, containing 380 `affected` and 250 `Healthy` images at last
-inspection. The validation split is not forced to equal class counts; equal
-counts are not required to calculate sensitivity or specificity. The saved
-metrics define `affected` as the positive class and report sensitivity and
-specificity at a 0.5 output threshold, along with confusion counts. The
-evaluation set's source, label mapping, overlap with training images, and
-representativeness still need verification.
+Evaluation is configured under `evaluation` in `config/config.yaml`. It loads
+the configured model and evaluates all images in the labeled test directory
+without making a validation split. It writes a JSON report with accuracy,
+class-specific precision/recall/F1, sensitivity, specificity, balanced
+accuracy, ROC-AUC, PR-AUC, Brier score, a confusion matrix, and stratified
+bootstrap confidence intervals. `bootstrap_samples` is the number of
+class-stratified resamples used to estimate those intervals: larger values
+usually make the estimates steadier but take longer. It does not add images or
+improve model accuracy. These image-level intervals assume samples are
+independent; if images are grouped by patient or lesion, confidence intervals
+should resample those groups instead. A CSV contains each relative image path,
+true and predicted labels, and the positive-class probability. The configured
+`affected` class is positive by default, and the decision threshold is fixed
+before evaluation rather than tuned on the evaluation set. The configuration
+includes explicit `class_mapping_verified` and
+`dataset_independence_verified` attestations; both default to `false` and
+should only be changed after the label mapping and data provenance are checked.
+
+The default directory is the separate legacy `skin-disease-images` dataset,
+containing 380 `affected` and 250 `Healthy` images at last inspection. The
+dataset's source, label mapping, overlap with training images, and
+representativeness have not been verified. The report records the configured
+verification flags (both false by default); these results must not be
+presented as a verified held-out test result or clinical validation.
+
+### Reconstruct and evaluate a Keras 3 weights archive
+
+If a model archive cannot be loaded by the project's TensorFlow/Keras 2.15
+runtime, reconstruct the configured VGG16 classifier and import its named
+layer weights directly from the archive:
+
+```powershell
+python -m vgg16classifier.pipeline.reconstruct_and_evaluate `
+  --archive artifacts/training/vgg16model..zip `
+  --output artifacts/training/vgg16model_reconstructed.keras
+```
+
+The command validates the archive, refuses to overwrite an existing output,
+saves a new native `.keras` model, and runs the regular evaluation against the
+configured `evaluation.test_data_dir`. It writes the configured metrics JSON
+and per-image predictions CSV. The original archive and model are left
+unchanged. This does not establish that the evaluation images are independent
+of training data; verify the class mapping and dataset provenance before
+interpreting metrics as held-out performance.
 
 ## Improving the project
 

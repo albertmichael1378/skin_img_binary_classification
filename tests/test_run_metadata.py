@@ -6,9 +6,10 @@ from pathlib import Path
 from vgg16classifier.components.run_metadata import (
     create_training_metadata,
     finish_training_metadata,
+    run_metadata_path,
     write_run_metadata,
 )
-from vgg16classifier.pipeline.predict import binary_class_index
+from vgg16classifier.pipeline.predict import PredictionPipeline, binary_class_index
 
 
 class TrainingMetadataTests(unittest.TestCase):
@@ -64,6 +65,20 @@ class TrainingMetadataTests(unittest.TestCase):
             self.assertEqual(len(saved["model"]["sha256"]), 64)
             self.assertEqual(saved["training"]["history"]["loss"], [0.8, 0.4])
 
+    def test_run_metadata_paths_include_utc_timestamp_and_unique_run_id(self):
+        metadata = {
+            "started_at_utc": "2026-10-26T06:30:15.123456+00:00",
+            "run_id": "12345678-1234-5678-1234-567812345678",
+        }
+
+        path = run_metadata_path(Path("artifacts/training/run_metadata"), metadata)
+
+        self.assertEqual(
+            path.as_posix(),
+            "artifacts/training/run_metadata/"
+            "run_metadata_20261026T063015123456Z_12345678.json",
+        )
+
     def test_binary_output_uses_sigmoid_threshold_or_two_class_argmax(self):
         self.assertEqual(binary_class_index([[0.49]]), 0)
         self.assertEqual(binary_class_index([[0.5]]), 1)
@@ -72,6 +87,19 @@ class TrainingMetadataTests(unittest.TestCase):
     def test_binary_output_rejects_unexpected_shapes(self):
         with self.assertRaises(ValueError):
             binary_class_index([[0.2, 0.3, 0.5]])
+
+    def test_prediction_accepts_native_keras_model_paths(self):
+        expected_path = Path("artifacts/training/vgg16model.keras")
+        pipeline = PredictionPipeline("lesion.jpg", model_path=expected_path)
+        self.assertEqual(pipeline._get_model_path(), expected_path)
+
+    def test_prediction_rejects_legacy_hdf5_model_paths(self):
+        pipeline = PredictionPipeline(
+            "lesion.jpg", model_path=Path("artifacts/training/vgg16model.h5")
+        )
+
+        with self.assertRaisesRegex(ValueError, r"native Keras \.keras model"):
+            pipeline._get_model_path()
 
     def test_failed_run_metadata_records_the_error(self):
         from vgg16classifier.components.run_metadata import finish_training_metadata

@@ -31,7 +31,7 @@ class PrepareCallback:
             tf.keras.callbacks.EarlyStopping(
                 monitor="val_auc",
                 mode="max",
-                patience=5,
+                patience=self.config.early_stopping_patience,
                 restore_best_weights=True,
             ),
             tf.keras.callbacks.ReduceLROnPlateau(

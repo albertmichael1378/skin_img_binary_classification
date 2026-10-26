@@ -181,6 +181,20 @@ def write_run_metadata(path: Path, metadata: Mapping[str, Any]) -> None:
     temporary_path.replace(path)
 
 
+def run_metadata_path(metadata_dir: Path, metadata: Mapping[str, Any]) -> Path:
+    """Build a stable, timestamped path for one training run's metadata record."""
+    started_at = metadata.get("started_at_utc")
+    run_id = metadata.get("run_id")
+    if not isinstance(started_at, str) or not isinstance(run_id, str):
+        raise ValueError("Run metadata must include started_at_utc and run_id")
+
+    timestamp = datetime.fromisoformat(
+        started_at.replace("Z", "+00:00")
+    ).astimezone(timezone.utc)
+    filename_timestamp = timestamp.strftime("%Y%m%dT%H%M%S%fZ")
+    return metadata_dir / f"run_metadata_{filename_timestamp}_{run_id[:8]}.json"
+
+
 def finish_training_metadata(
     metadata: dict[str, Any],
     *,

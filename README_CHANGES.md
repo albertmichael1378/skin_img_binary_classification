@@ -5,6 +5,54 @@ change, it describes the conflict or problem, the solution, and anything still
 unresolved. Append a dated entry here whenever additional project files are
 changed during this session.
 
+## 2026-10-26: Preserve timestamped training metadata
+
+### Conflicts and Problems
+
+- `.gitignore` correctly excluded generated models, but training overwrote one
+  `run_metadata.json`, leaving only the latest local run record.
+- Ignored metadata could not be retrieved later unless the files were saved or
+  versioned outside Git.
+
+### Solutions Applied
+
+- Training now writes each run to a distinct UTC-timestamped JSON file inside
+  `artifacts/training/run_metadata/`.
+- DVC tracks the metadata directory as a training output; Git continues to
+  ignore the generated files.
+- Documentation explains committing `dvc.lock`, pushing the DVC cache to a
+  configured remote, and pulling a historical revision to restore its metadata.
+
+### Outstanding Items and Verification
+
+- DVC is not installed in the current environment, so DVC output tracking and
+  historical restore must be verified after configuring the remote.
+
+## 2026-10-26: Align model artifacts on native Keras format
+
+### Conflicts and Problems
+
+- The training code saves `artifacts/training/vgg16model.keras`, while the DVC
+  training stage and prediction pipeline still referenced legacy `.h5` files.
+- `.dockerignore` excluded the `.keras` artifact, so container builds could
+  omit the model expected by prediction.
+
+### Solutions Applied
+
+- DVC now declares the configured model and metadata paths as training outputs,
+  and evaluation depends on that same configured model path.
+- Configuration generation enforces the `.keras` extension; evaluation and
+  prediction resolve the model path from the training configuration.
+- `.dockerignore` now permits the `.keras` model artifact in the Docker build
+  context.
+
+### Outstanding Items and Verification
+
+- DVC and TensorFlow were unavailable in the current environment, so a model
+  training run, inference run, and `dvc repro` were not performed.
+- Regenerate `dvc.lock` with DVC after running the updated pipeline against the
+  configured dataset and model artifact.
+
 ## 2026-09-30: Containerization
 
 ### Conflicts and Problems

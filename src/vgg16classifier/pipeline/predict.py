@@ -1,6 +1,5 @@
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing import image
-import os
+from pathlib import Path
+
 import numpy as np
 
 
@@ -16,16 +15,46 @@ def binary_class_index(raw_predictions: object) -> int:
 
 
 class PredictionPipeline:
-    def __init__(self, filename):
+    def __init__(self, filename: str, model_path: Path | None = None):
         self.filename = filename
+        self.model_path = model_path
+
+    def _get_model_path(self) -> Path:
+        """Use the configured training artifact unless a path was injected."""
+        model_path = self.model_path
+        if model_path is None:
+            from vgg16classifier.config.configuration import ConfigurationManager
+
+            model_path = (
+                ConfigurationManager().get_training_config().trained_model_path
+            )
+        if model_path.suffix.lower() != ".keras":
+            raise ValueError(
+                f"Expected a native Keras .keras model, got: {model_path}"
+            )
+        return model_path
 
     def predict(self):
-        # load model
-        model = load_model(os.path.join("artifacts", "training", "vgg16model.h5"))
+        model_path = self._get_model_path()
+        self.model_path = model_path
+
+        # Load TensorFlow only when inference is requested, not for metric helpers.
+        import tensorflow as tf
+        from vgg16classifier.components.prepare_base_model import VGG16Preprocessing
+
+        model = tf.keras.models.load_model(
+            model_path,
+            custom_objects={
+                "preprocess_input": (
+                    tf.keras.applications.vgg16.preprocess_input
+                ),
+                "VGG16Preprocessing": VGG16Preprocessing,
+            },
+        )
 
         imagename = self.filename
-        test_image = image.load_img(imagename, target_size=(224, 224))
-        test_image = image.img_to_array(test_image)
+        test_image = tf.keras.utils.load_img(imagename, target_size=(224, 224))
+        test_image = tf.keras.utils.img_to_array(test_image)
         test_image = np.expand_dims(test_image, axis=0)
         result = model.predict(test_image, verbose=0)
         class_index = binary_class_index(result)
