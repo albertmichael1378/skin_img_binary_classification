@@ -1,4 +1,16 @@
 {
-    "loss": 0.6623511910438538,
-    "accuracy": 0.6084656119346619
+    "loss": 3.6643712520599365,
+    "accuracy": 0.41798943281173706,
+    "sensitivity": 0.5,
+    "specificity": 0.29333333333333333,
+    "true_positive": 57,
+    "false_negative": 57,
+    "true_negative": 22,
+    "false_positive": 53,
+    "positive_class": "affected",
+    "threshold": 0.5,
+    "class_indices": {
+        "affected": 0,
+        "Healthy": 1
+    }
 }
