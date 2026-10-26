@@ -14,7 +14,11 @@ from vgg16classifier.components.run_metadata import (
     write_run_metadata,
 )
 from vgg16classifier.entity.configaration_entities import TrainingConfig
-from vgg16classifier.components.prepare_base_model import VGG16Preprocessing
+from vgg16classifier.components.prepare_base_model import (
+    AUGMENTATION_CONTRAST_FACTOR,
+    AUGMENTATION_ROTATION_FACTOR,
+    VGG16Preprocessing,
+)
 
 import numpy as np
 from pathlib import Path
@@ -195,9 +199,9 @@ class Training:
                 "augmentation_config": (
                     {
                         "random_flip": "horizontal_and_vertical",
-                        "random_rotation_factor": 15 / 360,
+                        "random_rotation_factor": AUGMENTATION_ROTATION_FACTOR,
                         "random_zoom_factor": 0.1,
-                        "random_contrast_factor": 0.1,
+                        "random_contrast_factor": AUGMENTATION_CONTRAST_FACTOR,
                     }
                     if self.config.params_is_augmentation
                     else None

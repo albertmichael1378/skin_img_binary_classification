@@ -73,6 +73,8 @@ Desktop.ini
 /artifacts/prepare_base_model/
 /artifacts/prepare_callbacks/
 /artifacts/training/*.h5
+/artifacts/training/vgg16model.zip
+/artifacts/training/vgg16model..zip
 /artifacts/training/*.keras
 /artifacts/training/*.weights.h5
 # Legacy metadata file from runs before timestamped metadata directories.

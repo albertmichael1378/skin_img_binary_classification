@@ -12,6 +12,9 @@ import tensorflow as tf
 from pathlib import Path
 from vgg16classifier.entity.configaration_entities import PrepareBaseModelConfig
 
+AUGMENTATION_ROTATION_FACTOR = 20 / 360
+AUGMENTATION_CONTRAST_FACTOR = 0.2
+
 
 @tf.keras.utils.register_keras_serializable(package="vgg16classifier")
 class VGG16Preprocessing(tf.keras.layers.Layer):
@@ -32,9 +35,9 @@ class PrepareBaseModel:
             x = tf.keras.Sequential(
                 [
                     tf.keras.layers.RandomFlip("horizontal_and_vertical"),
-                    tf.keras.layers.RandomRotation(15 / 360),
+                    tf.keras.layers.RandomRotation(AUGMENTATION_ROTATION_FACTOR),
                     tf.keras.layers.RandomZoom(0.1),
-                    tf.keras.layers.RandomContrast(0.1),
+                    tf.keras.layers.RandomContrast(AUGMENTATION_CONTRAST_FACTOR),
                 ],
                 name="augmentation",
             )(x)

@@ -112,7 +112,8 @@ The next VGG16 training run is configured as a single conservative trial:
 - head learning rate `1e-4`, fine-tuning learning rate `3e-6`;
 - fine-tune only `block5_conv3`, leaving the earlier VGG16 blocks frozen;
 - head dropout `0.6` and dense-kernel L2 strength `5e-4`;
-- retain the existing moderate flip, rotation, zoom, and contrast augmentation;
+- use horizontal/vertical flips, up to 20-degree rotation, 10% zoom, and 20%
+  contrast augmentation;
 - retain the 30-epoch head and 15-epoch fine-tune limits, with early-stopping
   patience increased to 7 epochs.
 
