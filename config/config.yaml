@@ -12,14 +12,14 @@ prepare_base_model:
 prepare_callbacks:
   root_dir: artifacts/prepare_callbacks
   tensorboard_root_log_dir: artifacts/prepare_callbacks/saving_tensorboard_log_dir
-  checkpoint_model_filepath: artifacts/prepare_callbacks/checkpoints_dir/vgg16model.h5
+  checkpoint_model_filepath: artifacts/prepare_callbacks/checkpoints_dir/vgg16model.keras
 
 
 
 
 training:
   root_dir: artifacts/training
-  training_data_dir: artifacts/data_source/Binary_Classification
+  training_data_dir: /kaggle/working/binary_dataset
   kaggle_data_dir: /kaggle/working/binary_dataset
-  trained_model_path: artifacts/training/vgg16model.h5
+  trained_model_path: artifacts/training/vgg16model.keras
   metadata_path: artifacts/training/run_metadata.json
