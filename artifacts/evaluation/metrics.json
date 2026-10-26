@@ -1,29 +1,29 @@
 {
   "schema_version": 1,
-  "evaluated_at_utc": "2026-10-26T14:25:15.894760+00:00",
+  "evaluated_at_utc": "2026-10-26T18:07:32.937353+00:00",
   "model": {
     "path": "artifacts\\training\\vgg16model_reconstructed.keras",
-    "sha256": "a92d68af31d6d9a8e7d3fc84c8696200179179d77561e0bde1bb16b0ba8ca21c"
+    "sha256": "6435e14dd2b9ddd481ed2709e1b3722c8a3749d38d361a1f7d7da584a7421c45"
   },
   "dataset": {
     "root": "artifacts\\data_source\\skin-disease-images",
     "split": "configured_test_data",
     "sample_count": 630,
     "class_indices": {
-      "affected": 0,
-      "Healthy": 1
+      "cancerous": 0,
+      "non-cancerous": 1
     },
     "class_counts": {
-      "affected": 380,
-      "Healthy": 250
+      "cancerous": 380,
+      "non-cancerous": 250
     },
     "manifest_algorithm": "sha256(relative_path_and_file_size)",
-    "manifest_sha256": "7abea01b8be9d9b8148df1d29100b694513bad8dcd421a47f6ee25cd56f4b4b6",
+    "manifest_sha256": "d4db6769d1be79e3f0edeff119b6ee15dd95389fa14ec75e300dd3c59a552816",
     "class_mapping_verified": false,
     "dataset_independence_verified": false
   },
   "protocol": {
-    "positive_class": "affected",
+    "positive_class": "cancerous",
     "decision_threshold": 0.5,
     "threshold_selection": "configured_before_evaluation; not tuned here",
     "bootstrap_samples": 1000,
@@ -31,98 +31,98 @@
     "confidence_interval_method": "stratified image-level percentile bootstrap; image independence is not verified"
   },
   "metrics": {
-    "accuracy": 0.4253968253968254,
-    "precision": 0.6022727272727273,
-    "recall": 0.1394736842105263,
-    "sensitivity": 0.1394736842105263,
-    "specificity": 0.86,
-    "f1_score": 0.22649572649572647,
-    "balanced_accuracy": 0.49973684210526315,
-    "true_positive": 53,
-    "false_negative": 327,
-    "true_negative": 215,
-    "false_positive": 35,
+    "accuracy": 0.42063492063492064,
+    "precision": 0.5806451612903226,
+    "recall": 0.14210526315789473,
+    "sensitivity": 0.14210526315789473,
+    "specificity": 0.844,
+    "f1_score": 0.22832980972515857,
+    "balanced_accuracy": 0.49305263157894735,
+    "true_positive": 54,
+    "false_negative": 326,
+    "true_negative": 211,
+    "false_positive": 39,
     "support": 630,
-    "roc_auc": 0.5351894736842105,
-    "pr_auc": 0.6300203960719786,
-    "brier_score": 0.5162294637198358
+    "roc_auc": 0.5441842105263158,
+    "pr_auc": 0.6302550606749593,
+    "brier_score": 0.42263336258465445
   },
   "class_metrics": {
-    "affected": {
-      "precision": 0.6022727272727273,
-      "recall": 0.1394736842105263,
-      "f1_score": 0.22649572649572647,
+    "cancerous": {
+      "precision": 0.5806451612903226,
+      "recall": 0.14210526315789473,
+      "f1_score": 0.22832980972515857,
       "support": 380
     },
-    "Healthy": {
-      "precision": 0.3966789667896679,
-      "recall": 0.86,
-      "f1_score": 0.5429292929292929,
+    "non-cancerous": {
+      "precision": 0.3929236499068901,
+      "recall": 0.844,
+      "f1_score": 0.5362134688691232,
       "support": 250
     }
   },
   "confusion_matrix": {
     "labels": [
-      "affected",
-      "Healthy"
+      "cancerous",
+      "non-cancerous"
     ],
     "rows": "true_label",
     "columns": "predicted_label",
     "matrix": [
       [
-        53,
-        327
+        54,
+        326
       ],
       [
-        35,
-        215
+        39,
+        211
       ]
     ]
   },
   "confidence_intervals": {
     "accuracy": {
-      "lower": 0.3984126984126984,
-      "upper": 0.4507936507936508,
+      "lower": 0.3904761904761905,
+      "upper": 0.44761904761904764,
       "confidence_level": 0.95
     },
     "precision": {
-      "lower": 0.5060139434141059,
-      "upper": 0.6913613081166272,
+      "lower": 0.47959183673469385,
+      "upper": 0.6666666666666666,
       "confidence_level": 0.95
     },
     "recall": {
       "lower": 0.10526315789473684,
-      "upper": 0.1763157894736842,
+      "upper": 0.17894736842105263,
       "confidence_level": 0.95
     },
     "specificity": {
-      "lower": 0.816,
-      "upper": 0.9,
+      "lower": 0.796,
+      "upper": 0.888,
       "confidence_level": 0.95
     },
     "f1_score": {
-      "lower": 0.17540045766590392,
-      "upper": 0.2768738343343087,
+      "lower": 0.17429193899782133,
+      "upper": 0.27755102040816326,
       "confidence_level": 0.95
     },
     "balanced_accuracy": {
-      "lower": 0.47182631578947365,
-      "upper": 0.5254736842105263,
+      "lower": 0.4617894736842105,
+      "upper": 0.5188447368421053,
       "confidence_level": 0.95
     },
     "roc_auc": {
-      "lower": 0.48933552631578947,
-      "upper": 0.5807222368421052,
+      "lower": 0.49687197368421054,
+      "upper": 0.5910819736842106,
       "confidence_level": 0.95
     },
     "pr_auc": {
-      "lower": 0.5949945366881916,
-      "upper": 0.6698585088268485,
+      "lower": 0.5923778065653054,
+      "upper": 0.6731703211823467,
       "confidence_level": 0.95
     },
     "brier_score": {
-      "lower": 0.49246911756822676,
-      "upper": 0.539324917147421,
+      "lower": 0.40124246797693186,
+      "upper": 0.44413571939157503,
       "confidence_level": 0.95
     }
   }
