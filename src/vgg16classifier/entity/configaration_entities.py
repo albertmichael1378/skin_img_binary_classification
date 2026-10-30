@@ -12,6 +12,7 @@ class PrepareBaseModelConfig:
     params_weights: str
     params_classes: int
     params_is_augmentation: bool
+    params_augmentation_brightness_factor: float
     params_head_dropout_rate: float
     params_head_l2_strength: float
 
@@ -34,6 +35,7 @@ class TrainingConfig:
     params_fine_tune_epochs: int
     params_batch_size: int
     params_is_augmentation: bool
+    params_augmentation_brightness_factor: float
     params_image_size: list
     params_learning_rate: float
     params_fine_tune_learning_rate: float

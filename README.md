@@ -34,8 +34,10 @@ training images, ground-truth labels, and metadata.
   fine-tunes VGG16 block 5 at a lower learning rate. This makes training,
   evaluation, and prediction use the same input preprocessing.
 - Optional model-integrated augmentation (horizontal/vertical flips, up to 20°
-  rotation, 10% zoom, and 20% contrast) is active during training and disabled
-  automatically for evaluation and prediction. Each training phase creates
+  rotation, 10% zoom, 20% contrast, and a configurable 10% brightness range)
+  is active during training and disabled automatically for evaluation and
+  prediction. The brightness factor is set by
+  `AUGMENTATION_BRIGHTNESS_FACTOR` in `params.yaml`. Each training phase creates
   fresh callbacks and a phase-specific best checkpoint, monitoring validation
   AUC.
 - GitHub Actions is currently CI-only: it checks out the repo and compiles

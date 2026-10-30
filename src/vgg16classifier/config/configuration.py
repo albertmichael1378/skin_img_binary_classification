@@ -30,6 +30,9 @@ class ConfigurationManager:
                 params_weights=self.params.WEIGHTS,
                 params_classes=self.params.CLASSES,
                 params_is_augmentation=self.params.AUGMENTATION,
+                params_augmentation_brightness_factor=(
+                    self.params.AUGMENTATION_BRIGHTNESS_FACTOR
+                ),
                 params_head_dropout_rate=self.params.HEAD_DROPOUT_RATE,
                 params_head_l2_strength=self.params.HEAD_L2_STRENGTH,
             )
@@ -77,6 +80,9 @@ class ConfigurationManager:
             params_fine_tune_epochs=params.FINE_TUNE_EPOCHS,
             params_batch_size=params.BATCH_SIZE,
             params_is_augmentation=params.AUGMENTATION,
+            params_augmentation_brightness_factor=(
+                params.AUGMENTATION_BRIGHTNESS_FACTOR
+            ),
             params_image_size=params.IMAGE_SIZE,
             params_learning_rate=params.LEARNING_RATE,
             params_fine_tune_learning_rate=params.FINE_TUNE_LEARNING_RATE,

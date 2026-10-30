@@ -38,6 +38,10 @@ class PrepareBaseModel:
                     tf.keras.layers.RandomRotation(AUGMENTATION_ROTATION_FACTOR),
                     tf.keras.layers.RandomZoom(0.1),
                     tf.keras.layers.RandomContrast(AUGMENTATION_CONTRAST_FACTOR),
+                    tf.keras.layers.RandomBrightness(
+                        self.config.params_augmentation_brightness_factor,
+                        value_range=(0, 255),
+                    ),
                 ],
                 name="augmentation",
             )(x)

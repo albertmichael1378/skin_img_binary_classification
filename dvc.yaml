@@ -22,6 +22,7 @@ stages:
       - CLASSES
       - WEIGHTS
       - LEARNING_RATE
+      - AUGMENTATION_BRIGHTNESS_FACTOR
       - HEAD_DROPOUT_RATE
       - HEAD_L2_STRENGTH
     outs:
@@ -50,6 +51,7 @@ stages:
       - FINE_TUNE_EPOCHS
       - BATCH_SIZE
       - AUGMENTATION
+      - AUGMENTATION_BRIGHTNESS_FACTOR
       - SEED
       - LEARNING_RATE
       - FINE_TUNE_LEARNING_RATE

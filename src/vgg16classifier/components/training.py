@@ -202,6 +202,9 @@ class Training:
                         "random_rotation_factor": AUGMENTATION_ROTATION_FACTOR,
                         "random_zoom_factor": 0.1,
                         "random_contrast_factor": AUGMENTATION_CONTRAST_FACTOR,
+                        "random_brightness_factor": (
+                            self.config.params_augmentation_brightness_factor
+                        ),
                     }
                     if self.config.params_is_augmentation
                     else None
