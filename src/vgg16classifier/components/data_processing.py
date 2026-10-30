@@ -17,8 +17,8 @@ class Data_preprocessing:
 
 
         # 2. Setup Directories & Paths
-        image_folder1 = Path("artifacts/data_source/Binary_classification/cancerous")
-        image_folder2 = Path("artifacts/data_source/Binary_classification/non_cancerous")
+        image_folder1 = Path("artifacts/data_source/Binary_Classification/cancerous")
+        image_folder2 = Path("artifacts/data_source/Binary_Classification/non_cancerous")
         save_folder = Path("artifacts/image_test")
         # Create the folder if it does not exist (parents=True creates intermediate folders if needed)
         save_folder.mkdir(parents=True, exist_ok=True)

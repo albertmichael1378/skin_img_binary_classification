@@ -62,6 +62,14 @@ stages:
       - ${training.metadata_dir}
 
 
+  duplicate_detection:
+    cmd: python src/vgg16classifier/pipeline/stage_o1_data.py
+    deps:
+      - src/vgg16classifier/pipeline/stage_o1_data.py
+      - src/vgg16classifier/components/data_processing.py
+      - artifacts/data_source/Binary_Classification
+    outs:
+      - artifacts/image_test/resnet_embeddings.npz
 
 
   evaluation:
@@ -79,6 +87,7 @@ stages:
       - ${evaluation.test_data_dir}
       - ${training.trained_model_path}
       - ${training.metadata_dir}
+      - artifacts/image_test/resnet_embeddings.npz
     params:
       - IMAGE_SIZE
       - BATCH_SIZE
