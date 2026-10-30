@@ -1,0 +1,21 @@
+tensorflow==2.20.0
+keras==3.13.2
+numpy==2.1.3
+ml-dtypes
+protobuf
+pandas
+dvc
+notebook
+matplotlib
+seaborn
+python-box
+PyYAML
+tqdm
+ensure
+joblib
+types-PyYAML
+scipy
+Flask
+Flask-Cors
+Pillow
+-e .

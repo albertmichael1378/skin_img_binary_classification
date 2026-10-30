@@ -152,6 +152,7 @@ class BinaryEvaluationMetricsTests(unittest.TestCase):
             config = EvaluationConfigs(
                 root_dir=root / "evaluation",
                 path_of_model=model_path,
+                training_metadata_dir=root / "run_metadata",
                 weights_archive_path=root / "weights.zip",
                 test_data_dir=data_root,
                 reconstructed_model_path=model_path,

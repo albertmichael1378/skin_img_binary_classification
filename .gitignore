@@ -3,7 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 .Python
-
+.keras
+.keras/
+.weights.h5
 # Virtual environments
 .venv/
 venv/
@@ -71,8 +73,10 @@ Desktop.ini
 
 # Generated model, callback, and training outputs
 /artifacts/prepare_base_model/
+/artifacts/image_test/
 /artifacts/prepare_callbacks/
 /artifacts/training/*.h5
+/artifacts/training/models/
 /artifacts/training/vgg16model.zip
 /artifacts/training/vgg16model..zip
 /artifacts/training/*.keras

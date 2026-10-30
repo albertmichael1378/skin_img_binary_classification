@@ -45,6 +45,7 @@ class TrainingConfig:
 class EvaluationConfigs:
     root_dir: Path
     path_of_model: Path
+    training_metadata_dir: Path
     weights_archive_path: Path
     test_data_dir: Path
     reconstructed_model_path: Path

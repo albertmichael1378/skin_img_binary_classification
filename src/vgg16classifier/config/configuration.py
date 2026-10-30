@@ -103,7 +103,10 @@ class ConfigurationManager:
 
         return EvaluationConfigs(
             root_dir=Path(evaluation.root_dir),
-            path_of_model=Path(evaluation.reconstructed_model_path),
+            # Evaluate the model artifact directly; reconstruction is a separate
+            # compatibility workflow for runtimes that cannot load its format.
+            path_of_model=Path(self.config.training.trained_model_path),
+            training_metadata_dir=Path(self.config.training.metadata_dir),
             weights_archive_path=Path(evaluation.weights_archive_path),
             test_data_dir=Path(evaluation.test_data_dir),
             reconstructed_model_path=Path(evaluation.reconstructed_model_path),

@@ -309,6 +309,19 @@ class Evaluation:
             interpolation="bilinear",
         )
 
+    def _additional_metrics(
+        self,
+        true_labels: np.ndarray,
+        positive_probabilities: np.ndarray,
+        positive_index: int,
+    ) -> dict[str, float]:
+        """Allow framework-specific evaluators to add metrics without changing reports."""
+        if true_labels.shape != positive_probabilities.shape:
+            raise ValueError("Additional metrics require aligned labels and scores")
+        if positive_index not in (0, 1):
+            raise ValueError("positive_index must be 0 or 1")
+        return {}
+
     def evaluation(self) -> None:
         if not np.isfinite(self.config.decision_threshold) or not (
             0 <= self.config.decision_threshold <= 1
@@ -391,6 +404,13 @@ class Evaluation:
             predicted_labels,
             positive_index,
             positive_probabilities,
+        )
+        metrics.update(
+            self._additional_metrics(
+                true_labels,
+                positive_probabilities,
+                positive_index,
+            )
         )
         class_metrics = _class_metrics(
             true_labels, predicted_labels, self.config.class_names

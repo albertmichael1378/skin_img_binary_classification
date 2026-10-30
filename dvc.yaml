@@ -65,10 +65,10 @@ stages:
 
 
   evaluation:
-    cmd: python src/vgg16classifier/pipeline/stage_04_evaluation.py
+    cmd: python src/vgg16classifier/pipeline/stage_04_evaluation_keras3.py
     deps:
-      - src/vgg16classifier/pipeline/stage_04_evaluation.py
-      - src/vgg16classifier/components/prepare_base_model.py
+      - src/vgg16classifier/pipeline/stage_04_evaluation_keras3.py
+      - src/vgg16classifier/components/evaluation_keras3.py
       - src/vgg16classifier/components/evaluation.py
       - src/vgg16classifier/config/configuration.py
       - src/vgg16classifier/entity/configaration_entities.py
@@ -77,14 +77,12 @@ stages:
       - src/vgg16classifier/__init__.py
       - config/config.yaml
       - ${evaluation.test_data_dir}
-      - ${evaluation.weights_archive_path}
+      - ${training.trained_model_path}
+      - ${training.metadata_dir}
     params:
       - IMAGE_SIZE
-      - INCLUDE_TOP
-      - CLASSES
-      - AUGMENTATION
+      - BATCH_SIZE
     outs:
-      - ${evaluation.reconstructed_model_path}
       - ${evaluation.predictions_output_path}
     metrics:
     - ${evaluation.metrics_output_path}:

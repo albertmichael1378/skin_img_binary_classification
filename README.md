@@ -197,25 +197,27 @@ representativeness have not been verified. The report records the configured
 verification flags (both false by default); these results must not be
 presented as a verified held-out test result or clinical validation.
 
-### Reconstruct and evaluate a Keras 3 weights archive
-
-If a model archive cannot be loaded by the project's TensorFlow/Keras 2.15
-runtime, reconstruct the configured VGG16 classifier and import its named
-layer weights directly from the archive:
+### Evaluate a native Keras 3 model
 
 ```powershell
-python -m vgg16classifier.pipeline.reconstruct_and_evaluate `
-  --archive artifacts/training/vgg16model..zip `
-  --output artifacts/training/vgg16model_reconstructed.keras
+python src/vgg16classifier/pipeline/stage_04_evaluation_keras3.py
 ```
 
-The command validates the archive, refuses to overwrite an existing output,
-saves a new native `.keras` model, and runs the regular evaluation against the
-configured `evaluation.test_data_dir`. It writes the configured metrics JSON
-and per-image predictions CSV. The original archive and model are left
-unchanged. This does not establish that the evaluation images are independent
-of training data; verify the class mapping and dataset provenance before
-interpreting metrics as held-out performance.
+This stage loads `training.trained_model_path` directly with standalone Keras
+3 and reports the test-set loss, accuracy, precision, recall, and ROC-AUC
+using Keras' built-in loss and metric classes. `val_roc` is the validation
+ROC-AUC recorded for the selected checkpoint in matching training metadata;
+it is not recomputed on the evaluation dataset. The shared report also includes
+the confusion matrix, class metrics, confidence intervals, and per-image
+predictions. The model archive records the Keras version that saved it; the
+stage stops with a clear error if the active Keras version is older than that
+version. Verify the class mapping and dataset provenance before interpreting
+metrics as held-out performance.
+
+The separate
+`python -m vgg16classifier.pipeline.reconstruct_and_evaluate` command remains
+available for importing weights from a Keras archive when direct model loading
+is not an option.
 
 ## Improving the project
 
