@@ -182,7 +182,7 @@ function sendRequest(base64Data){
                     try{
                         var imageData = res[1].image;
                         if(imageData.length > 100){
-                            if(imageData.length > 10){$(".res-part2").append("<img class='resp-img' src='data:image/jpeg;base64," + imageData + "' alt='' />");}
+                            if(imageData.length > 10){$(".res-part2").append("<img class='resp-img' src='data:image/jpeg;base64," + imageData + "' alt='Grad-CAM explanation overlay' />");}
                         }
                     }catch(e){}
                     $(".res-part").html("<pre>" + JSON.stringify(res[0], undefined, 2) + "</pre>");

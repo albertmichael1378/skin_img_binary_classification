@@ -9,6 +9,7 @@ import tempfile
 import zipfile
 
 import tensorflow as tf
+tf.keras.mixed_precision.set_global_policy("mixed_float16")  # before building the model
 from pathlib import Path
 from vgg16classifier.entity.configaration_entities import PrepareBaseModelConfig
 
@@ -29,6 +30,7 @@ class PrepareBaseModel:
         self.config = config
 
     def _build_base_model(self, weights: str | None) -> None:
+        
         inputs = tf.keras.Input(shape=self.config.params_image_size)
         x = inputs
         if self.config.params_is_augmentation:
@@ -187,6 +189,7 @@ class PrepareBaseModel:
                         layer.set_weights(values)
 
     def _prepare_full_model(self, model, classes, freeze_all, freeze_till):
+        
         if freeze_all:
             for layer in model.layers:
                 layer.trainable = False
@@ -210,12 +213,12 @@ class PrepareBaseModel:
         )(x)
         if classes == 2:
             x = tf.keras.layers.Dense(
-                units=1, activation='sigmoid', name="classifier"
+                units=1, activation='sigmoid',dtype="float32", name="classifier"
             )(x)
         else:
             # If you ever change to multi-class, it automatically switches to softmax
             x = tf.keras.layers.Dense(
-                units=classes, activation='softmax', name="classifier"
+                units=classes, activation='softmax', dtype="float32", name="classifier"
             )(x)
         # prediction = tf.keras.layers.Dense(
         #     units=classes,

@@ -12,7 +12,9 @@ training images, ground-truth labels, and metadata.
 ## Current state
 
 - The Flask application serves image predictions; it does not expose a training
-  route.
+  route. Prediction responses include a Grad-CAM overlay and the strongest
+  activation-map grid cell as a qualitative model explanation, not a medical
+  localization or diagnosis.
 - The DVC training stage currently uses
   `artifacts/data_source/Binary_Classification`. The checked-in DVC lockfile
   still refers to a previous 630-image dataset and older parameter values, so

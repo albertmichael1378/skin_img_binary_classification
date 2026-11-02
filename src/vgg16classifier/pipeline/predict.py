@@ -61,7 +61,23 @@ class PredictionPipeline:
 
         if class_index == 1:
             prediction = 'non_cancerous'
-            return [{"image": prediction}]
         else:
             prediction = 'cancerous'
-            return [{"image": prediction}]
+
+        from vgg16classifier.components.grad_cam import (
+            encode_grad_cam_overlay,
+            grad_cam,
+        )
+
+        heatmap = grad_cam(model, test_image[0], class_index=class_index)
+        peak_cell = np.unravel_index(np.argmax(heatmap), heatmap.shape)
+        overlay = encode_grad_cam_overlay(test_image[0], heatmap)
+        return [
+            {
+                "image": prediction,
+                "grad_cam_peak_cell": [int(row) for row in peak_cell],
+                "model_path": str(self.model_path),
+                "imagename": imagename,
+            },
+            {"image": overlay},
+        ]
