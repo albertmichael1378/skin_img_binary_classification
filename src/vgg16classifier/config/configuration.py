@@ -30,6 +30,9 @@ class ConfigurationManager:
                 params_weights=self.params.WEIGHTS,
                 params_classes=self.params.CLASSES,
                 params_is_augmentation=self.params.AUGMENTATION,
+                AUGMENTATION_CONTRAST_FACTOR=self.params.AUGMENTATION_CONTRAST_FACTOR,
+                RANDOM_ZOOM=self.params.RANDOM_ZOOM,
+                AUGMENTATION_ROTATION_FACTOR=self.params.AUGMENTATION_ROTATION_FACTOR,
                 params_augmentation_brightness_factor=(
                     self.params.AUGMENTATION_BRIGHTNESS_FACTOR
                 ),

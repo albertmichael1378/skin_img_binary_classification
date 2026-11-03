@@ -13,8 +13,7 @@ tf.keras.mixed_precision.set_global_policy("mixed_float16")  # before building t
 from pathlib import Path
 from vgg16classifier.entity.configaration_entities import PrepareBaseModelConfig
 
-AUGMENTATION_ROTATION_FACTOR = 0.5
-AUGMENTATION_CONTRAST_FACTOR = 0.3
+
 
 
 @tf.keras.utils.register_keras_serializable(package="vgg16classifier")
@@ -37,9 +36,9 @@ class PrepareBaseModel:
             x = tf.keras.Sequential(
                 [
                     tf.keras.layers.RandomFlip("horizontal_and_vertical"),
-                    tf.keras.layers.RandomRotation(AUGMENTATION_ROTATION_FACTOR),
-                    tf.keras.layers.RandomZoom(0.25),
-                    tf.keras.layers.RandomContrast(AUGMENTATION_CONTRAST_FACTOR),
+                    tf.keras.layers.RandomRotation(self.config.AUGMENTATION_ROTATION_FACTOR),
+                    tf.keras.layers.RandomZoom(self.config.RANDOM_ZOOM),
+                    tf.keras.layers.RandomContrast(self.config.AUGMENTATION_CONTRAST_FACTOR),
                     tf.keras.layers.RandomBrightness(
                         self.config.params_augmentation_brightness_factor,
                         value_range=(0, 255),

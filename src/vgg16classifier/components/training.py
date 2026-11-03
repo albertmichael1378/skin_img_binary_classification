@@ -13,10 +13,9 @@ from vgg16classifier.components.run_metadata import (
     run_metadata_path,
     write_run_metadata,
 )
+from vgg16classifier.config.configuration import ConfigurationManager
 from vgg16classifier.entity.configaration_entities import TrainingConfig
 from vgg16classifier.components.prepare_base_model import (
-    AUGMENTATION_CONTRAST_FACTOR,
-    AUGMENTATION_ROTATION_FACTOR,
     VGG16Preprocessing,
 )
 
@@ -177,7 +176,7 @@ class Training:
         # Calculate balanced weights
         class_weight_dict = get_balanced_class_weights(self.train_labels)
         logger.info(f"Class weights: {class_weight_dict}")
-
+        base_Model_config=ConfigurationManager.get_prepare_base_model_config()
         metadata = create_training_metadata(
             repo_root=repo_root,
             dataset_root=Path(self.config.training_data_dir),
@@ -199,9 +198,9 @@ class Training:
                 "augmentation_config": (
                     {
                         "random_flip": "horizontal_and_vertical",
-                        "random_rotation_factor": AUGMENTATION_ROTATION_FACTOR,
-                        "random_zoom_factor": 0.1,
-                        "random_contrast_factor": AUGMENTATION_CONTRAST_FACTOR,
+                        "random_rotation_factor": base_Model_config.AUGMENTATION_ROTATION_FACTOR,
+                        "random_zoom_factor": base_Model_config.RANDOM_ZOOM,
+                        "random_contrast_factor": base_Model_config.AUGMENTATION_CONTRAST_FACTOR,
                         "random_brightness_factor": (
                             self.config.params_augmentation_brightness_factor
                         ),
