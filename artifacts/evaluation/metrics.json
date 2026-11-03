@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "evaluated_at_utc": "2026-10-30T11:36:59.757562+00:00",
+  "evaluated_at_utc": "2026-11-03T15:37:15.382649+00:00",
   "model": {
     "path": "artifacts\\training\\vgg16model.keras",
-    "sha256": "8bc4071905f886c73b2b84b88d3c75bd13594045ad7121a1627f85add0ce7b57"
+    "sha256": "b527f9e8a19704a8d46e187c40a60157a020ae091df0444f968ca5e616f3aa0a"
   },
   "dataset": {
     "root": "artifacts\\data_source\\skin-disease-images",
@@ -31,36 +31,36 @@
     "confidence_interval_method": "stratified image-level percentile bootstrap; image independence is not verified"
   },
   "metrics": {
-    "accuracy": 0.420634925365448,
-    "precision": 0.692307710647583,
-    "recall": 0.07105263322591782,
-    "sensitivity": 0.07105263157894737,
-    "specificity": 0.952,
-    "f1_score": 0.12887828162291168,
-    "balanced_accuracy": 0.5115263157894736,
-    "true_positive": 27,
-    "false_negative": 353,
-    "true_negative": 238,
-    "false_positive": 12,
+    "accuracy": 0.41904762387275696,
+    "precision": 0.7058823704719543,
+    "recall": 0.06315789371728897,
+    "sensitivity": 0.06315789473684211,
+    "specificity": 0.96,
+    "f1_score": 0.11594202898550725,
+    "balanced_accuracy": 0.511578947368421,
+    "true_positive": 24,
+    "false_negative": 356,
+    "true_negative": 240,
+    "false_positive": 10,
     "support": 630,
-    "roc_auc": 0.5586052631578947,
-    "pr_auc": 0.6474779395343301,
-    "brier_score": 0.40164831032482706,
-    "loss": 1.465358018875122,
-    "roc": 0.5586947202682495,
-    "val_roc": 0.8658745884895325
+    "roc_auc": 0.5573421052631579,
+    "pr_auc": 0.6437415521847482,
+    "brier_score": 0.399628225336487,
+    "loss": 1.4619696140289307,
+    "roc": 0.5577737092971802,
+    "val_roc": 0.8615714311599731
   },
   "class_metrics": {
     "cancerous": {
-      "precision": 0.6923076923076923,
-      "recall": 0.07105263157894737,
-      "f1_score": 0.12887828162291168,
+      "precision": 0.7058823529411765,
+      "recall": 0.06315789473684211,
+      "f1_score": 0.11594202898550725,
       "support": 380
     },
     "non-cancerous": {
-      "precision": 0.4027072758037225,
-      "recall": 0.952,
-      "f1_score": 0.5659928656361474,
+      "precision": 0.40268456375838924,
+      "recall": 0.96,
+      "f1_score": 0.5673758865248227,
       "support": 250
     }
   },
@@ -73,59 +73,59 @@
     "columns": "predicted_label",
     "matrix": [
       [
-        27,
-        353
+        24,
+        356
       ],
       [
-        12,
-        238
+        10,
+        240
       ]
     ]
   },
   "confidence_intervals": {
     "accuracy": {
-      "lower": 0.4015873015873016,
-      "upper": 0.4396825396825397,
+      "lower": 0.4,
+      "upper": 0.436547619047619,
       "confidence_level": 0.95
     },
     "precision": {
-      "lower": 0.5405405405405406,
-      "upper": 0.8285714285714286,
+      "lower": 0.5428571428571428,
+      "upper": 0.8529411764705882,
       "confidence_level": 0.95
     },
     "recall": {
-      "lower": 0.04473684210526316,
-      "upper": 0.1,
+      "lower": 0.039473684210526314,
+      "upper": 0.08947368421052632,
       "confidence_level": 0.95
     },
     "specificity": {
-      "lower": 0.924,
-      "upper": 0.976,
+      "lower": 0.932,
+      "upper": 0.984,
       "confidence_level": 0.95
     },
     "f1_score": {
-      "lower": 0.08373869839387081,
-      "upper": 0.17512121344486428,
+      "lower": 0.07425284195086175,
+      "upper": 0.16037735849056606,
       "confidence_level": 0.95
     },
     "balanced_accuracy": {
-      "lower": 0.49226184210526314,
-      "upper": 0.5293171052631579,
+      "lower": 0.49368289473684207,
+      "upper": 0.5287368421052632,
       "confidence_level": 0.95
     },
     "roc_auc": {
-      "lower": 0.510108552631579,
-      "upper": 0.6057547368421052,
+      "lower": 0.5093984210526316,
+      "upper": 0.6024743421052631,
       "confidence_level": 0.95
     },
     "pr_auc": {
-      "lower": 0.6071907034805276,
-      "upper": 0.6876938029568915,
+      "lower": 0.6028800953207459,
+      "upper": 0.68544540551904,
       "confidence_level": 0.95
     },
     "brier_score": {
-      "lower": 0.3813701967294677,
-      "upper": 0.4217516634090822,
+      "lower": 0.3805462279706779,
+      "upper": 0.41894400562663353,
       "confidence_level": 0.95
     }
   }

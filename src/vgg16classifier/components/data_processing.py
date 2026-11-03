@@ -20,8 +20,8 @@ class Data_preprocessing:
 
 
         # 2. Setup Directories & Paths
-        image_folder1 = os.path.join(config.training_data_dir,"cancerous")
-        image_folder2 = os.path.join(config.training_data_dir,"non_cancerous")
+        image_folder1 = Path(config.training_data_dir)/"cancerous"
+        image_folder2 = Path(config.training_data_dir)/"non_cancerous"
         save_folder = Path("artifacts/image_test")
         # Create the folder if it does not exist (parents=True creates intermediate folders if needed)
         save_folder.mkdir(parents=True, exist_ok=True)

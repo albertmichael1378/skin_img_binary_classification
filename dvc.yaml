@@ -78,7 +78,6 @@ stages:
       - ${evaluation.test_data_dir}
       - ${training.trained_model_path}
       - ${training.metadata_dir}
-      - artifacts/image_test/resnet_embeddings.npz
     params:
       - IMAGE_SIZE
       - BATCH_SIZE
