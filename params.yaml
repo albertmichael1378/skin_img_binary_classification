@@ -1,10 +1,10 @@
 AUGMENTATION: True
 # Mild brightness variation helps the model tolerate lighting and camera differences.
-AUGMENTATION_BRIGHTNESS_FACTOR: 0.1
+AUGMENTATION_BRIGHTNESS_FACTOR: 0.2
 IMAGE_SIZE: [224, 224, 3] # as per the keras VGG 16 model
 BATCH_SIZE: 62
 INCLUDE_TOP: False
-EPOCHS: 52
+EPOCHS: 100
 FINE_TUNE_EPOCHS: 38
 CLASSES: 2
 WEIGHTS: imagenet
