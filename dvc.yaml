@@ -63,17 +63,6 @@ stages:
       - ${training.trained_model_path}
       - ${training.metadata_dir}
 
-
-  duplicate_detection:
-    cmd: python src/vgg16classifier/pipeline/stage_o1_data.py
-    deps:
-      - src/vgg16classifier/pipeline/stage_o1_data.py
-      - src/vgg16classifier/components/data_processing.py
-      - artifacts/data_source/Binary_Classification
-    outs:
-      - artifacts/image_test/resnet_embeddings.npz
-
-
   evaluation:
     cmd: python src/vgg16classifier/pipeline/stage_04_evaluation_keras3.py
     deps:
@@ -95,6 +84,15 @@ stages:
       - BATCH_SIZE
     outs:
       - ${evaluation.predictions_output_path}
+      - ${evaluation.root_dir}/runs
     metrics:
     - ${evaluation.metrics_output_path}:
         cache: false
+  duplicate_detection:
+      cmd: python src/vgg16classifier/pipeline/stage_o1_data.py
+      deps:
+        - src/vgg16classifier/pipeline/stage_o1_data.py
+        - src/vgg16classifier/components/data_processing.py
+        - artifacts/data_source/Binary_Classification
+      outs:
+        - artifacts/image_test/resnet_embeddings.npz

@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -507,21 +508,32 @@ class Evaluation:
         if self.score is None:
             raise RuntimeError("Run evaluation() before saving evaluation results")
 
-        # Create the configured artifact root and output parents on every entry path.
+        # Keep the configured paths as the latest results for existing consumers.
         self.config.root_dir.mkdir(parents=True, exist_ok=True)
         self.config.metrics_output_path.parent.mkdir(parents=True, exist_ok=True)
         self.config.predictions_output_path.parent.mkdir(
             parents=True, exist_ok=True
         )
-        with self.config.metrics_output_path.open(
-            "w", encoding="utf-8"
-        ) as metrics_file:
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+        run_dir = (
+            self.config.root_dir
+            / "runs"
+            / f"run_{timestamp}_{uuid.uuid4().hex[:8]}"
+        )
+        run_dir.mkdir(parents=True, exist_ok=False)
+
+        self._write_metrics(run_dir / "metrics.json")
+        self._write_predictions(run_dir / "predictions.csv")
+        self._write_metrics(self.config.metrics_output_path)
+        self._write_predictions(self.config.predictions_output_path)
+
+    def _write_metrics(self, path: Path) -> None:
+        with path.open("w", encoding="utf-8") as metrics_file:
             json.dump(self.score, metrics_file, indent=2)
             metrics_file.write("\n")
 
-        with self.config.predictions_output_path.open(
-            "w", newline="", encoding="utf-8"
-        ) as predictions_file:
+    def _write_predictions(self, path: Path) -> None:
+        with path.open("w", newline="", encoding="utf-8") as predictions_file:
             writer = csv.DictWriter(
                 predictions_file,
                 fieldnames=[

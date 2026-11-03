@@ -201,10 +201,35 @@ class BinaryEvaluationMetricsTests(unittest.TestCase):
             self.assertTrue(config.root_dir.is_dir())
             self.assertTrue(config.metrics_output_path.is_file())
             self.assertTrue(config.predictions_output_path.is_file())
+            run_directories = list((config.root_dir / "runs").iterdir())
+            self.assertEqual(len(run_directories), 1)
+            self.assertRegex(
+                run_directories[0].name,
+                r"^run_\d{8}T\d{12}Z_[0-9a-f]{8}$",
+            )
+            archived_metrics = run_directories[0] / "metrics.json"
+            archived_predictions = run_directories[0] / "predictions.csv"
+            self.assertTrue(archived_metrics.is_file())
+            self.assertTrue(archived_predictions.is_file())
+            archived_predictions_content = archived_predictions.read_text(
+                encoding="utf-8"
+            )
             self.assertEqual(
                 json.loads(
                     config.metrics_output_path.read_text(encoding="utf-8")
                 )["metrics"]["accuracy"],
+                1,
+            )
+            evaluator.save_score()
+            self.assertEqual(len(list((config.root_dir / "runs").iterdir())), 2)
+            self.assertEqual(
+                archived_predictions.read_text(encoding="utf-8"),
+                archived_predictions_content,
+            )
+            self.assertEqual(
+                json.loads(archived_metrics.read_text(encoding="utf-8"))[
+                    "metrics"
+                ]["accuracy"],
                 1,
             )
 

@@ -3,9 +3,12 @@ import tensorflow as tf
 from keras.applications import ResNet50
 from sklearn.metrics.pairwise import cosine_similarity
 from pathlib import Path
+from vgg16classifier.entity.configaration_entities import TrainingConfig
+import os
 
 class Data_preprocessing:
-    def __init__(self):
+    def __init__(self, config: TrainingConfig):
+        self.config = config
         # 1. Hardware Configuration & GPU Detection
         gpus = tf.config.list_physical_devices('GPU')
         if gpus:
@@ -17,8 +20,8 @@ class Data_preprocessing:
 
 
         # 2. Setup Directories & Paths
-        image_folder1 = Path("/kaggle/working/binary_dataset/cancerous")
-        image_folder2 = Path("/kaggle/working/binary_dataset/non_cancerous")
+        image_folder1 = os.path.join(config.training_data_dir,"cancerous")
+        image_folder2 = os.path.join(config.training_data_dir,"non_cancerous")
         save_folder = Path("artifacts/image_test")
         # Create the folder if it does not exist (parents=True creates intermediate folders if needed)
         save_folder.mkdir(parents=True, exist_ok=True)
@@ -47,7 +50,7 @@ class Data_preprocessing:
         # Apply ResNet50's specific mathematical scaling
         img = tf.keras.applications.resnet50.preprocess_input(img)
         return img
-    def extract_embedding_matrix(self):
+    def extract_embedding_matrix(self,):
         
         # Create an optimized TensorFlow dataset
         dataset = tf.data.Dataset.from_tensor_slices(self.path_strings)
