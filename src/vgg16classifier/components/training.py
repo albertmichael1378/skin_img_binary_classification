@@ -176,7 +176,7 @@ class Training:
         # Calculate balanced weights
         class_weight_dict = get_balanced_class_weights(self.train_labels)
         logger.info(f"Class weights: {class_weight_dict}")
-        base_Model_config=ConfigurationManager.get_prepare_base_model_config()
+        base_Model_config = ConfigurationManager().get_prepare_base_model_config()
         metadata = create_training_metadata(
             repo_root=repo_root,
             dataset_root=Path(self.config.training_data_dir),
