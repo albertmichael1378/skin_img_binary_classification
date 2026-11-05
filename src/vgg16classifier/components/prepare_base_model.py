@@ -69,7 +69,10 @@ class PrepareBaseModel:
             x = tf.keras.Sequential(
                 [
                     tf.keras.layers.RandomFlip("horizontal_and_vertical"),
-                    tf.keras.layers.RandomRotation(self.config.AUGMENTATION_ROTATION_FACTOR, fill_mode="reflect"),
+                    tf.keras.layers.RandomRotation(
+                        factor=self.config.AUGMENTATION_ROTATION_FACTOR,
+                        fill_mode="reflect",
+                    ),
                     tf.keras.layers.RandomZoom(self.config.RANDOM_ZOOM),
                     tf.keras.layers.RandomContrast(self.config.AUGMENTATION_CONTRAST_FACTOR),
                     tf.keras.layers.RandomBrightness(

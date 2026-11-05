@@ -13,9 +13,9 @@ class PrepareBaseModelConfig:
     params_classes: int
     params_is_augmentation: bool
     params_augmentation_brightness_factor: float
-    AUGMENTATION_ROTATION_FACTOR: float
+    AUGMENTATION_ROTATION_FACTOR: float | tuple[float, float]
     AUGMENTATION_CONTRAST_FACTOR: float
-    RANDOM_ZOOM: float
+    RANDOM_ZOOM: float | tuple[float, float]
     params_head_dropout_rate: float
     params_head_l2_strength: float
 

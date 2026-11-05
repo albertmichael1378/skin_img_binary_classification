@@ -5,6 +5,15 @@ from vgg16classifier.utils.common import read_yaml, create_directories
 from vgg16classifier.entity.configaration_entities import (PrepareBaseModelConfig,PrepareCallbacksConfig,TrainingConfig,EvaluationConfigs)
 import os
 
+
+def _factor_or_range(value: float | list[float]) -> float | tuple[float, float]:
+    if isinstance(value, list):
+        if len(value) != 2:
+            raise ValueError("Augmentation factor ranges must contain two values")
+        return float(value[0]), float(value[1])
+    return float(value)
+
+
 class ConfigurationManager:
     def __init__(
         self,
@@ -31,8 +40,10 @@ class ConfigurationManager:
                 params_classes=self.params.CLASSES,
                 params_is_augmentation=self.params.AUGMENTATION,
                 AUGMENTATION_CONTRAST_FACTOR=self.params.AUGMENTATION_CONTRAST_FACTOR,
-                RANDOM_ZOOM=self.params.RANDOM_ZOOM,
-                AUGMENTATION_ROTATION_FACTOR=self.params.AUGMENTATION_ROTATION_FACTOR,
+                RANDOM_ZOOM=_factor_or_range(self.params.RANDOM_ZOOM),
+                AUGMENTATION_ROTATION_FACTOR=_factor_or_range(
+                    self.params.AUGMENTATION_ROTATION_FACTOR
+                ),
                 params_augmentation_brightness_factor=(
                     self.params.AUGMENTATION_BRIGHTNESS_FACTOR
                 ),
