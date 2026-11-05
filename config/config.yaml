@@ -33,7 +33,7 @@ evaluation:
   test_data_dir: artifacts\data_source\skin-disease-images
   metrics_output_path: artifacts/evaluation/metrics.json
   predictions_output_path: artifacts/evaluation/predictions.csv
-  class_names: [cancerous,non-cancerous]
+  class_names: [cancerous,non_cancerous]
   positive_class: cancerous
   decision_threshold: 0.7
   # Number of class-stratified bootstrap resamples used for confidence intervals.
