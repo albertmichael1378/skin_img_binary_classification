@@ -15,6 +15,7 @@ from vgg16classifier.entity.configaration_entities import PrepareBaseModelConfig
 
 
 
+ #1. Define the 1st_custom layer at the top of your file
 
 @tf.keras.utils.register_keras_serializable(package="vgg16classifier")
 class VGG16Preprocessing(tf.keras.layers.Layer):
@@ -22,7 +23,39 @@ class VGG16Preprocessing(tf.keras.layers.Layer):
 
     def call(self, inputs):
         return tf.keras.applications.vgg16.preprocess_input(inputs)
+    
+    
+# 1. Define the 2_nd_custom layer at the top of your file
 
+
+class CircleMask(tf.keras.layers.Layer):
+    def __init__(self, radius=0.46, **kw):
+        super().__init__(**kw)
+        self.radius = radius
+
+    def call(self, x):
+        h, w = tf.shape(x)[1], tf.shape(x)[2]
+        
+        # Create a grid of coordinates
+        yy, xx = tf.meshgrid(
+            tf.linspace(-0.5, 0.5, h), 
+            tf.linspace(-0.5, 0.5, w), 
+            indexing="ij"
+        )
+        
+        # Create the circular mask
+        mask = tf.cast(tf.sqrt(xx**2 + yy**2) <= self.radius, x.dtype)[None, ..., None]
+        
+        # VGG16 ImageNet means
+        mean = tf.constant([123.68, 116.78, 103.94], dtype=x.dtype)
+        
+        # Apply mask and fill background with mean
+        return x * mask + mean * (1 - mask)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"radius": self.radius})
+        return config
 
 class PrepareBaseModel:
     def __init__(self, config: PrepareBaseModelConfig):
@@ -46,6 +79,8 @@ class PrepareBaseModel:
                 ],
                 name="augmentation",
             )(x)
+        # STEP 2: Apply the Circle Mask
+        x = CircleMask(radius=0.46, name="circle_mask")(x)
         preprocessed_inputs = VGG16Preprocessing(name="vgg16_preprocess")(x)
         self.model = tf.keras.applications.vgg16.VGG16(
             input_shape=self.config.params_image_size,

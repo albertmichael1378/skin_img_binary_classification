@@ -34,6 +34,7 @@ class TrainingConfig:
     trained_model_path: Path
     updated_base_model_path: Path
     training_data_dir: Path
+    validation_split: float
     params_epochs: int
     params_fine_tune_epochs: int
     params_batch_size: int
@@ -57,6 +58,7 @@ class EvaluationConfigs:
     metrics_output_path: Path
     predictions_output_path: Path
     class_names: tuple[str, str]
+    test_directory_class_names: tuple[str, str]
     positive_class: str
     decision_threshold: float
     bootstrap_samples: int

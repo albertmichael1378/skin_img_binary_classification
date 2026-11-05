@@ -299,8 +299,8 @@ class Evaluation:
             )
         return tf.keras.utils.image_dataset_from_directory(
             directory=self.config.test_data_dir,
-            # Explicit names lock folder labels to the same indices as the model.
-            class_names=list(self.config.class_names),
+            # Explicit ordering maps folder labels to the model's class indices.
+            class_names=list(self.config.test_directory_class_names),
             labels="inferred",
             label_mode="int",
             image_size=tuple(self.config.params_image_size[:-1]),
@@ -310,51 +310,11 @@ class Evaluation:
             interpolation="bilinear",
         )
 
-    def _additional_metrics(
+    def _predict_dataset(
         self,
-        true_labels: np.ndarray,
-        positive_probabilities: np.ndarray,
-        positive_index: int,
-    ) -> dict[str, float]:
-        """Allow framework-specific evaluators to add metrics without changing reports."""
-        if true_labels.shape != positive_probabilities.shape:
-            raise ValueError("Additional metrics require aligned labels and scores")
-        if positive_index not in (0, 1):
-            raise ValueError("positive_index must be 0 or 1")
-        return {}
-
-    def evaluation(self) -> None:
-        if not np.isfinite(self.config.decision_threshold) or not (
-            0 <= self.config.decision_threshold <= 1
-        ):
-            raise ValueError("decision_threshold must be between 0 and 1")
-        if self.config.bootstrap_samples < 1:
-            raise ValueError("bootstrap_samples must be at least 1")
-        if not np.isfinite(self.config.confidence_level) or not (
-            0 < self.config.confidence_level < 1
-        ):
-            raise ValueError("confidence_level must be between 0 and 1")
-        if len(self.config.class_names) != 2 or len(set(self.config.class_names)) != 2:
-            raise ValueError("Exactly two distinct class_names must be configured")
-        if self.config.positive_class not in self.config.class_names:
-            raise ValueError("positive_class must be one of the configured class names")
-        if self.config.params_batch_size < 1:
-            raise ValueError("params_batch_size must be at least 1")
-
-        model_path = self.config.path_of_model
-        if not model_path.is_file():
-            raise FileNotFoundError(f"Model file does not exist: {model_path}")
-        model = self.load_model(model_path)
-        dataset = self._load_test_dataset()
-        class_indices = {
-            class_name: index for index, class_name in enumerate(self.config.class_names)
-        }
-        if dataset.class_names != list(self.config.class_names):
-            raise ValueError(
-                f"Unexpected evaluation class mapping: {dataset.class_names}"
-            )
-        positive_index = class_indices[self.config.positive_class]
-
+        model: Any,
+        dataset: Any,
+    ) -> tuple[np.ndarray, np.ndarray]:
         labels: list[np.ndarray] = []
         class_one_probabilities: list[np.ndarray] = []
         for images, batch_labels in dataset:
@@ -373,7 +333,6 @@ class Evaluation:
                 (predictions < 0) | (predictions > 1)
             ):
                 raise ValueError("Model outputs must be finite class probabilities")
-            # A sigmoid head models class index 1, as assigned by the loader.
             if predictions.shape[1] == 1:
                 batch_class_one_probabilities = predictions[:, 0]
             else:
@@ -386,17 +345,77 @@ class Evaluation:
             class_one_probabilities.append(
                 np.asarray(batch_class_one_probabilities, dtype=np.float64)
             )
+        if not labels:
+            raise ValueError("Dataset must contain at least one labeled image")
+        return np.concatenate(labels), np.concatenate(class_one_probabilities)
 
-        true_labels = np.concatenate(labels)
-        class_one_probability = np.concatenate(class_one_probabilities)
-        # Use the complement when class index 0 is the configured positive class.
-        positive_probabilities = (
-            class_one_probability
-            if positive_index == 1
-            else 1 - class_one_probability
+    def _additional_metrics(
+        self,
+        true_labels: np.ndarray,
+        positive_probabilities: np.ndarray,
+        positive_index: int,
+        threshold: float,
+    ) -> dict[str, float]:
+        """Allow framework-specific evaluators to add metrics without changing reports."""
+        if true_labels.shape != positive_probabilities.shape:
+            raise ValueError("Additional metrics require aligned labels and scores")
+        if positive_index not in (0, 1):
+            raise ValueError("positive_index must be 0 or 1")
+        if not np.isfinite(threshold) or not 0 <= threshold <= 1:
+            raise ValueError("threshold must be between 0 and 1")
+        return {}
+
+    def evaluation(self) -> None:
+        if not np.isfinite(self.config.decision_threshold) or not (
+            0 <= self.config.decision_threshold <= 1
+        ):
+            raise ValueError("decision_threshold must be between 0 and 1")
+        if self.config.bootstrap_samples < 1:
+            raise ValueError("bootstrap_samples must be at least 1")
+        if not np.isfinite(self.config.confidence_level) or not (
+            0 < self.config.confidence_level < 1
+        ):
+            raise ValueError("confidence_level must be between 0 and 1")
+        if len(self.config.class_names) != 2 or len(set(self.config.class_names)) != 2:
+            raise ValueError("Exactly two distinct class_names must be configured")
+        if (
+            len(self.config.test_directory_class_names) != 2
+            or len(set(self.config.test_directory_class_names)) != 2
+        ):
+            raise ValueError(
+                "Exactly two distinct test_directory_class_names must be configured"
+            )
+        if self.config.positive_class not in self.config.class_names:
+            raise ValueError("positive_class must be one of the configured class names")
+        if self.config.params_batch_size < 1:
+            raise ValueError("params_batch_size must be at least 1")
+
+        model_path = self.config.path_of_model
+        if not model_path.is_file():
+            raise FileNotFoundError(f"Model file does not exist: {model_path}")
+        model = self.load_model(model_path)
+        dataset = self._load_test_dataset()
+        class_indices = {
+            class_name: index for index, class_name in enumerate(self.config.class_names)
+        }
+        if dataset.class_names != list(self.config.test_directory_class_names):
+            raise ValueError(
+                "Unexpected test-directory class mapping: "
+                f"{dataset.class_names}"
+            )
+        positive_index = class_indices[self.config.positive_class]
+
+        true_labels, test_class_one_probability = self._predict_dataset(
+            model, dataset
         )
+        positive_probabilities = (
+            test_class_one_probability
+            if positive_index == 1
+            else 1 - test_class_one_probability
+        )
+        threshold = self.config.decision_threshold
         predicted_labels = np.where(
-            positive_probabilities >= self.config.decision_threshold,
+            positive_probabilities >= threshold,
             positive_index,
             1 - positive_index,
         )
@@ -411,6 +430,7 @@ class Evaluation:
                 true_labels,
                 positive_probabilities,
                 positive_index,
+                threshold,
             )
         )
         class_metrics = _class_metrics(
@@ -441,6 +461,9 @@ class Evaluation:
                 "split": "configured_test_data",
                 "sample_count": int(true_labels.size),
                 "class_indices": class_indices,
+                "directory_class_names": list(
+                    self.config.test_directory_class_names
+                ),
                 "class_counts": {
                     class_name: int(np.sum(true_labels == index))
                     for class_name, index in class_indices.items()
@@ -457,7 +480,7 @@ class Evaluation:
             },
             "protocol": {
                 "positive_class": self.config.positive_class,
-                "decision_threshold": self.config.decision_threshold,
+                "decision_threshold": threshold,
                 "threshold_selection": "configured_before_evaluation; not tuned here",
                 "bootstrap_samples": self.config.bootstrap_samples,
                 "confidence_level": self.config.confidence_level,
@@ -478,7 +501,7 @@ class Evaluation:
                 true_labels,
                 positive_probabilities,
                 positive_index=positive_index,
-                threshold=self.config.decision_threshold,
+                threshold=threshold,
                 samples=self.config.bootstrap_samples,
                 confidence_level=self.config.confidence_level,
                 seed=self.config.seed,
@@ -493,7 +516,7 @@ class Evaluation:
                 "true_label": self.config.class_names[int(true_label)],
                 "predicted_label": self.config.class_names[int(predicted_label)],
                 "positive_class_probability": float(probability),
-                "decision_threshold": self.config.decision_threshold,
+                "decision_threshold": threshold,
                 "correct": bool(true_label == predicted_label),
             }
             for filepath, true_label, predicted_label, probability in zip(

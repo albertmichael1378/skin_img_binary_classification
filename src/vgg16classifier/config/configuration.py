@@ -79,6 +79,7 @@ class ConfigurationManager:
             trained_model_path=trained_model_path,
             updated_base_model_path=Path(prepare_base_model.updated_base_model_path),
             training_data_dir=Path(training.training_data_dir),
+            validation_split=training.validation_split,
             params_epochs=params.EPOCHS,
             params_fine_tune_epochs=params.FINE_TUNE_EPOCHS,
             params_batch_size=params.BATCH_SIZE,
@@ -122,6 +123,9 @@ class ConfigurationManager:
             metrics_output_path=metrics_output_path,
             predictions_output_path=predictions_output_path,
             class_names=tuple(evaluation.class_names),
+            test_directory_class_names=tuple(
+                evaluation.test_directory_class_names
+            ),
             positive_class=evaluation.positive_class,
             decision_threshold=evaluation.decision_threshold,
             bootstrap_samples=evaluation.bootstrap_samples,

@@ -157,13 +157,15 @@ class Keras3Evaluation(Evaluation):
                 "The evaluation data pipeline uses TensorFlow; configure Keras "
                 "3 to use the TensorFlow backend."
             )
-        from vgg16classifier.components.prepare_base_model import VGG16Preprocessing
+        from vgg16classifier.components.prepare_base_model import VGG16Preprocessing, CircleMask
 
         return keras.models.load_model(
             path,
             custom_objects={
                 "preprocess_input": keras.applications.vgg16.preprocess_input,
+                
                  "VGG16Preprocessing": VGG16Preprocessing,
+                 "CircleMask": CircleMask,
             },
             compile=False,
             safe_mode=True,
@@ -174,12 +176,13 @@ class Keras3Evaluation(Evaluation):
         true_labels: np.ndarray,
         positive_probabilities: np.ndarray,
         positive_index: int,
+        threshold: float,
     ) -> dict[str, float]:
         positive_labels = (true_labels == positive_index).astype(np.int32)
         metrics = _keras_builtin_metrics(
             positive_labels,
             positive_probabilities,
-            threshold=self.config.decision_threshold,
+            threshold=threshold,
         )
         metrics["val_roc"] = _selected_validation_roc(
             self.config.training_metadata_dir,

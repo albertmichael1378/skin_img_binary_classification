@@ -20,22 +20,25 @@ prepare_callbacks:
 training:
   root_dir: artifacts/training
   training_data_dir: /kaggle/working/binary_dataset/train
+  validation_split: 0.20
   kaggle_data_dir: /kaggle/working/binary_dataset
   trained_model_path: artifacts/training/vgg16model.keras
   metadata_dir: artifacts/training/run_metadata
 
-# Evaluation reads every image in this labeled directory without creating a
-# validation split. Confirm that this dataset is independent of training data.
+# Evaluation applies a fixed threshold configured before evaluating this
+# labeled test directory; it does not tune the threshold on validation or test.
 evaluation:
   root_dir: artifacts/evaluation
   weights_archive_path: artifacts/training/vgg16model.zip
   reconstructed_model_path: artifacts/training/vgg16model_reconstructed.keras
-  test_data_dir: artifacts\data_source\skin-disease-images
+  test_data_dir: /kaggle/working/binary_dataset/eval
   metrics_output_path: artifacts/evaluation/metrics.json
   predictions_output_path: artifacts/evaluation/predictions.csv
   class_names: [cancerous,non_cancerous]
+  # Must follow class_names index order; test folders use a hyphen in class 1.
+  test_directory_class_names: [cancerous,non_cancerous]
   positive_class: cancerous
-  decision_threshold: 0.7
+  decision_threshold: 0.6
   # Number of class-stratified bootstrap resamples used for confidence intervals.
   bootstrap_samples: 1000
   confidence_level: 0.95

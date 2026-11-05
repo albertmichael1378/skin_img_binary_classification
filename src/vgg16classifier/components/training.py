@@ -16,7 +16,7 @@ from vgg16classifier.components.run_metadata import (
 from vgg16classifier.config.configuration import ConfigurationManager
 from vgg16classifier.entity.configaration_entities import TrainingConfig
 from vgg16classifier.components.prepare_base_model import (
-    VGG16Preprocessing,
+    VGG16Preprocessing,CircleMask,
 )
 
 import numpy as np
@@ -55,6 +55,7 @@ class Training:
                     tf.keras.applications.vgg16.preprocess_input
                 ),
                 "VGG16Preprocessing": VGG16Preprocessing,
+                "CircleMask": CircleMask,
             },
         )
         self._compile_model(self.config.params_learning_rate)
@@ -75,7 +76,7 @@ class Training:
         # 1. Load Validation Dataset
         self.valid_dataset = tf.keras.utils.image_dataset_from_directory(
             directory=self.config.training_data_dir,
-            validation_split=0.20,
+            validation_split=self.config.validation_split,
             subset="validation",
             seed=self.config.SEED,
             image_size=self.config.params_image_size[:-1],
@@ -86,7 +87,7 @@ class Training:
         # 2. Load Training Dataset
         self.train_dataset = tf.keras.utils.image_dataset_from_directory(
             directory=self.config.training_data_dir,
-            validation_split=0.20,
+            validation_split=self.config.validation_split,
             subset="training",
             seed=self.config.SEED,
             image_size=self.config.params_image_size[:-1],
@@ -209,7 +210,7 @@ class Training:
                     else None
                 ),
                 "image_size": list(self.config.params_image_size),
-                "validation_split": 0.20,
+                "validation_split": self.config.validation_split,
                 "fine_tune_epochs": self.config.params_fine_tune_epochs,
                 "fine_tune_layers": list(self.config.params_fine_tune_layers),
                 "fine_tune_learning_rate": self.config.params_fine_tune_learning_rate,
@@ -323,6 +324,7 @@ class Training:
                         tf.keras.applications.vgg16.preprocess_input
                     ),
                     "VGG16Preprocessing": VGG16Preprocessing,
+                    "CircleMask": CircleMask,
                 },
                 compile=False,
             )
@@ -370,13 +372,14 @@ class Training_Old:
             self.config.updated_base_model_path,
             custom_objects={
                 "VGG16Preprocessing": VGG16Preprocessing,
+                "CircleMask": CircleMask,
             },
         )
 
     def train_valid_generator(self):
 
         datagenerator_kwargs = dict(
-            validation_split=0.20
+            validation_split=self.config.validation_split
         )
 
         dataflow_kwargs = dict(
@@ -461,7 +464,7 @@ class Training_Old:
                 "batch_size": self.config.params_batch_size,
                 "augmentation": self.config.params_is_augmentation,
                 "image_size": list(self.config.params_image_size),
-                "validation_split": 0.20,
+                "validation_split": self.config.validation_split,
                 "learning_rate": float(
                     tf.keras.backend.get_value(self.model.optimizer.learning_rate)
                 ),

@@ -159,6 +159,7 @@ class BinaryEvaluationMetricsTests(unittest.TestCase):
                 metrics_output_path=root / "reports" / "metrics" / "metrics.json",
                 predictions_output_path=root / "reports" / "predictions" / "images.csv",
                 class_names=("affected", "Healthy"),
+                test_directory_class_names=("affected", "Healthy"),
                 positive_class="affected",
                 decision_threshold=0.7,
                 bootstrap_samples=20,
@@ -184,6 +185,9 @@ class BinaryEvaluationMetricsTests(unittest.TestCase):
 
                 self.assertEqual(evaluator.score["metrics"]["accuracy"], 1)
                 self.assertEqual(evaluator.score["metrics"]["sensitivity"], 1)
+                self.assertEqual(
+                    evaluator.score["protocol"]["decision_threshold"], 0.7
+                )
                 self.assertEqual(
                     evaluator.score["confusion_matrix"]["matrix"], [[1, 0], [0, 1]]
                 )

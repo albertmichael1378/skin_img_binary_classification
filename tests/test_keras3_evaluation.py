@@ -123,7 +123,7 @@ class Keras3ModelCompatibilityTests(unittest.TestCase):
             with self.assertRaisesRegex(FileNotFoundError, "No completed training"):
                 _selected_validation_roc(metadata_dir, model_path)
 
-    def test_evaluation_report_contains_requested_keras_builtin_metrics(self):
+    def test_report_uses_configured_threshold_for_keras_metrics(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
             data_root = root / "test-data"
@@ -160,6 +160,7 @@ class Keras3ModelCompatibilityTests(unittest.TestCase):
                 metrics_output_path=root / "metrics.json",
                 predictions_output_path=root / "predictions.csv",
                 class_names=("negative", "positive"),
+                test_directory_class_names=("negative", "positive"),
                 positive_class="positive",
                 decision_threshold=0.7,
                 bootstrap_samples=5,
@@ -181,9 +182,29 @@ class Keras3ModelCompatibilityTests(unittest.TestCase):
                     "_load_test_dataset",
                     return_value=_EvaluationDataset(data_root),
                 ),
+                patch(
+                    "vgg16classifier.components.evaluation_keras3."
+                    "_keras_builtin_metrics",
+                    return_value={
+                        "loss": 0.25,
+                        "accuracy": 1.0,
+                        "precision": 1.0,
+                        "recall": 1.0,
+                        "roc": 1.0,
+                    },
+                ) as keras_metrics,
             ):
                 evaluator.evaluation()
 
+            keras_metrics.assert_called_once()
+            keras_metric_labels, keras_metric_probabilities = (
+                keras_metrics.call_args.args
+            )
+            np.testing.assert_array_equal(keras_metric_labels, [0, 1])
+            np.testing.assert_array_equal(
+                keras_metric_probabilities, [0.1, 0.9]
+            )
+            self.assertEqual(keras_metrics.call_args.kwargs["threshold"], 0.7)
             self.assertEqual(evaluator.score["metrics"]["accuracy"], 1.0)
             self.assertEqual(evaluator.score["metrics"]["precision"], 1.0)
             self.assertEqual(evaluator.score["metrics"]["recall"], 1.0)

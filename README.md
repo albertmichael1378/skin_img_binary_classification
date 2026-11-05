@@ -177,8 +177,13 @@ a configured remote and pushed DVC cache, ignored files remain only on the
 machine where training ran.
 
 Evaluation is configured under `evaluation` in `config/config.yaml`. It loads
-the configured model and evaluates all images in the labeled test directory
-without making a validation split. It writes a JSON report with accuracy,
+the configured model and applies the fixed `decision_threshold` from that
+configuration to the labeled test directory. The default threshold is `0.7`;
+set it before evaluation and do not tune it on the test data. The report
+includes sensitivity and specificity at that operating point, making the
+trade-off visible. For a target-sensitivity workflow, calibrate the threshold
+on a separate validation set first, then freeze it in the configuration before
+running this evaluation. It writes a JSON report with accuracy,
 class-specific precision/recall/F1, sensitivity, specificity, balanced
 accuracy, ROC-AUC, PR-AUC, Brier score, a confusion matrix, and stratified
 bootstrap confidence intervals. `bootstrap_samples` is the number of
@@ -187,19 +192,21 @@ usually make the estimates steadier but take longer. It does not add images or
 improve model accuracy. These image-level intervals assume samples are
 independent; if images are grouped by patient or lesion, confidence intervals
 should resample those groups instead. A CSV contains each relative image path,
-true and predicted labels, and the positive-class probability. The configured
-`affected` class is positive by default, and the decision threshold is fixed
-before evaluation rather than tuned on the evaluation set. The configuration
-includes explicit `class_mapping_verified` and
+true and predicted labels, the positive-class probability, and configured
+threshold. The configured `cancerous` class is positive by default. The
+configuration includes explicit `class_mapping_verified` and
 `dataset_independence_verified` attestations; both default to `false` and
 should only be changed after the label mapping and data provenance are checked.
 
-The default directory is the separate legacy `skin-disease-images` dataset,
-containing 380 `affected` and 250 `Healthy` images at last inspection. The
-dataset's source, label mapping, overlap with training images, and
-representativeness have not been verified. The report records the configured
-verification flags (both false by default); these results must not be
-presented as a verified held-out test result or clinical validation.
+The configured `skin-disease-images` test directory uses `cancerous` and
+`non-cancerous` folder labels, while the training class name uses an underscore
+for `non_cancerous`. `test_directory_class_names` explicitly maps the test
+folder order to the model's `class_names`; keep those two lists aligned by
+index and verify the source labels before evaluation. The dataset's provenance,
+overlap with training images, and representativeness have not been verified.
+The report records the configured verification flags (both false by default);
+these results must not be presented as a verified held-out test result or
+clinical validation.
 
 ### Evaluate a native Keras 3 model
 
