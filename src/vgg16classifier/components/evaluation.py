@@ -260,7 +260,8 @@ def _dataset_fingerprint(dataset_root: Path, filepaths: list[str]) -> str:
     digest = hashlib.sha256()
     for filepath in sorted(filepaths):
         image_path = Path(filepath)
-        relative_path = image_path.resolve().relative_to(dataset_root.resolve())
+           # NEW CODE (Fixes the crash)
+        relative_path = Path(image_path).relative_to(Path(dataset_root))
         digest.update(relative_path.as_posix().encode("utf-8"))
         digest.update(b"\0")
         digest.update(str(image_path.stat().st_size).encode("ascii"))
@@ -509,10 +510,10 @@ class Evaluation:
         }
         self.predictions = [
             {
-                "image": Path(filepath)
-                .resolve()
-                .relative_to(self.config.test_data_dir.resolve())
-                .as_posix(),
+                # FIX: Removed .resolve() so it uses the symlink path (/kaggle/working/...) 
+                # instead of following it to the original path (/kaggle/input/...)
+                "image": Path(filepath).relative_to(self.config.test_data_dir).as_posix(),
+                
                 "true_label": self.config.class_names[int(true_label)],
                 "predicted_label": self.config.class_names[int(predicted_label)],
                 "positive_class_probability": float(probability),
@@ -526,7 +527,6 @@ class Evaluation:
                 positive_probabilities,
             )
         ]
-
     def save_score(self) -> None:
         if self.score is None:
             raise RuntimeError("Run evaluation() before saving evaluation results")

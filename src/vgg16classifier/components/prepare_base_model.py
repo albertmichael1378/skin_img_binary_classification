@@ -69,18 +69,18 @@ class PrepareBaseModel:
             x = tf.keras.Sequential(
                 [
                     tf.keras.layers.RandomFlip("horizontal_and_vertical"),
-                    tf.keras.layers.RandomRotation(self.config.AUGMENTATION_ROTATION_FACTOR),
+                    tf.keras.layers.RandomRotation(self.config.AUGMENTATION_ROTATION_FACTOR, fill_mode="reflect"),
                     tf.keras.layers.RandomZoom(self.config.RANDOM_ZOOM),
                     tf.keras.layers.RandomContrast(self.config.AUGMENTATION_CONTRAST_FACTOR),
                     tf.keras.layers.RandomBrightness(
                         self.config.params_augmentation_brightness_factor,
                         value_range=(0, 255),
-                    ),
+                    )
                 ],
                 name="augmentation",
             )(x)
         # STEP 2: Apply the Circle Mask
-        x = CircleMask(radius=0.46, name="circle_mask")(x)
+        x = CircleMask(radius=0.36, name="circle_mask")(x)
         preprocessed_inputs = VGG16Preprocessing(name="vgg16_preprocess")(x)
         self.model = tf.keras.applications.vgg16.VGG16(
             input_shape=self.config.params_image_size,

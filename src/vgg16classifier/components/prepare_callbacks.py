@@ -37,9 +37,9 @@ class PrepareCallback:
             tf.keras.callbacks.ReduceLROnPlateau(
                 monitor="val_auc",
                 mode="max",
-                factor=0.3,
-                patience=2,
-                min_lr=1e-7,
+                factor=0.5,
+                patience=4,
+                min_lr=1e-6,
             ),
             self._create_ckpt_callbacks(phase),
         ]
