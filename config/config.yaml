@@ -30,7 +30,7 @@ evaluation:
   root_dir: artifacts/evaluation
   weights_archive_path: artifacts/training/vgg16model.zip
   reconstructed_model_path: artifacts/training/vgg16model_reconstructed.keras
-  test_data_dir: /kaggle/working/binary_dataset/eval
+  test_data_dir: artifacts\data_source\skin-disease-images
   metrics_output_path: artifacts/evaluation/metrics.json
   predictions_output_path: artifacts/evaluation/predictions.csv
   class_names: [cancerous,non-cancerous]
