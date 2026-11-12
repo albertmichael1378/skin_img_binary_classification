@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "evaluated_at_utc": "2026-11-12T13:26:20.221297+00:00",
+  "model": {
+    "path": "artifacts\\training\\vgg16model.keras",
+    "sha256": "2b5f1dd239860e2497167e24c011fcbe2db033eb6a452f8b4c5e9af867d53a02"
+  },
+  "dataset": {
+    "root": "artifacts\\data_source\\skin-disease-images",
+    "split": "configured_test_data",
+    "sample_count": 630,
+    "class_indices": {
+      "cancerous": 0,
+      "non_cancerous": 1
+    },
+    "directory_class_names": [
+      "cancerous",
+      "non_cancerous"
+    ],
+    "class_counts": {
+      "cancerous": 380,
+      "non_cancerous": 250
+    },
+    "manifest_algorithm": "sha256(relative_path_and_file_size)",
+    "manifest_sha256": "c2d7a1b08a9000023d9300d9258c487363b26d9e799937ce462c41f81d2330c7",
+    "class_mapping_verified": false,
+    "dataset_independence_verified": false
+  },
+  "protocol": {
+    "positive_class": "cancerous",
+    "decision_threshold": 0.6,
+    "threshold_selection": "configured_before_evaluation; not tuned here",
+    "brier_skill_score_reference": "test_set_class_prevalence",
+    "bootstrap_samples": 1000,
+    "confidence_level": 0.95,
+    "confidence_interval_method": "stratified image-level percentile bootstrap; image independence is not verified"
+  },
+  "metrics": {
+    "accuracy": 0.43015873432159424,
+    "precision": 0.6438356041908264,
+    "recall": 0.12368421256542206,
+    "sensitivity": 0.12368421052631579,
+    "specificity": 0.896,
+    "f1_score": 0.20750551876379694,
+    "balanced_accuracy": 0.5098421052631579,
+    "true_positive": 47,
+    "false_negative": 333,
+    "true_negative": 224,
+    "false_positive": 26,
+    "support": 630,
+    "roc_auc": 0.5772,
+    "pr_auc": 0.6524662741759293,
+    "brier_score": 0.46542133678448966,
+    "brier_score_reference": 0.2393550012597632,
+    "brier_skill_score": -0.944481353365936,
+    "loss": 2.4360241889953613,
+    "roc": 0.5749420523643494,
+    "val_roc": 0.909009575843811
+  },
+  "class_metrics": {
+    "cancerous": {
+      "precision": 0.6438356164383562,
+      "recall": 0.12368421052631579,
+      "f1_score": 0.20750551876379694,
+      "support": 380
+    },
+    "non_cancerous": {
+      "precision": 0.4021543985637343,
+      "recall": 0.896,
+      "f1_score": 0.5551425030978935,
+      "support": 250
+    }
+  },
+  "confusion_matrix": {
+    "labels": [
+      "cancerous",
+      "non_cancerous"
+    ],
+    "rows": "true_label",
+    "columns": "predicted_label",
+    "matrix": [
+      [
+        47,
+        333
+      ],
+      [
+        26,
+        224
+      ]
+    ]
+  },
+  "confidence_intervals": {
+    "accuracy": {
+      "lower": 0.40634920634920635,
+      "upper": 0.45559523809523805,
+      "confidence_level": 0.95
+    },
+    "precision": {
+      "lower": 0.5396773182957393,
+      "upper": 0.7536231884057971,
+      "confidence_level": 0.95
+    },
+    "recall": {
+      "lower": 0.08947368421052632,
+      "upper": 0.15526315789473685,
+      "confidence_level": 0.95
+    },
+    "specificity": {
+      "lower": 0.856,
+      "upper": 0.932,
+      "confidence_level": 0.95
+    },
+    "f1_score": {
+      "lower": 0.15419501133786845,
+      "upper": 0.25524850470597843,
+      "confidence_level": 0.95
+    },
+    "balanced_accuracy": {
+      "lower": 0.4841013157894737,
+      "upper": 0.535803947368421,
+      "confidence_level": 0.95
+    },
+    "roc_auc": {
+      "lower": 0.5344997368421053,
+      "upper": 0.6219169736842105,
+      "confidence_level": 0.95
+    },
+    "pr_auc": {
+      "lower": 0.6174961146886699,
+      "upper": 0.6994460358508102,
+      "confidence_level": 0.95
+    },
+    "brier_score": {
+      "lower": 0.4408893786252735,
+      "upper": 0.48677867620601956,
+      "confidence_level": 0.95
+    },
+    "brier_score_reference": {
+      "lower": 0.2393550012597632,
+      "upper": 0.2393550012597632,
+      "confidence_level": 0.95
+    },
+    "brier_skill_score": {
+      "lower": -1.0337100693280963,
+      "upper": -0.8419894144881162,
+      "confidence_level": 0.95
+    }
+  }
+}

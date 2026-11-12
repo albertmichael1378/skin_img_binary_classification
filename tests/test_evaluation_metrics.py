@@ -1,4 +1,5 @@
 import json
+import hashlib
 import tempfile
 import unittest
 from pathlib import Path
@@ -79,6 +80,19 @@ class BinaryEvaluationMetricsTests(unittest.TestCase):
         self.assertEqual(metrics["roc_auc"], 1)
         self.assertEqual(metrics["pr_auc"], 1)
         self.assertAlmostEqual(metrics["brier_score"], 0.0325)
+        self.assertAlmostEqual(metrics["brier_score_reference"], 0.25)
+        self.assertAlmostEqual(metrics["brier_skill_score"], 0.87)
+
+    def test_brier_skill_score_is_zero_for_climatology_forecasts(self):
+        metrics = calculate_binary_metrics(
+            true_indices=[0, 0, 0, 1],
+            predicted_indices=[0, 0, 0, 1],
+            positive_index=1,
+            positive_probabilities=[0.25, 0.25, 0.25, 0.25],
+        )
+
+        self.assertEqual(metrics["brier_skill_score"], 0)
+        self.assertAlmostEqual(metrics["brier_score_reference"], 0.1875)
 
     def test_ranking_metrics_handle_tied_probabilities(self):
         metrics = calculate_binary_metrics(
@@ -116,6 +130,8 @@ class BinaryEvaluationMetricsTests(unittest.TestCase):
                 "roc_auc",
                 "pr_auc",
                 "brier_score",
+                "brier_score_reference",
+                "brier_skill_score",
             },
         )
         self.assertEqual(intervals["accuracy"]["lower"], 1)
@@ -171,6 +187,19 @@ class BinaryEvaluationMetricsTests(unittest.TestCase):
                 params_batch_size=2,
             )
             evaluator = Evaluation(config)
+            metadata_dir = config.training_metadata_dir
+            metadata_dir.mkdir(parents=True)
+            model_hash = hashlib.sha256(model_path.read_bytes()).hexdigest()
+            (metadata_dir / "run_metadata_test.json").write_text(
+                json.dumps(
+                    {
+                        "status": "completed",
+                        "started_at_utc": "2026-10-27T12:00:00+00:00",
+                        "model": {"sha256": model_hash},
+                    }
+                ),
+                encoding="utf-8",
+            )
 
             for model in (_TestModel(), _TwoClassTestModel()):
                 with (
@@ -215,6 +244,15 @@ class BinaryEvaluationMetricsTests(unittest.TestCase):
             archived_predictions = run_directories[0] / "predictions.csv"
             self.assertTrue(archived_metrics.is_file())
             self.assertTrue(archived_predictions.is_file())
+            persisted_training_metadata = json.loads(
+                (metadata_dir / "run_metadata_test.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertIn(
+                "brier_skill_score",
+                persisted_training_metadata["evaluation"]["metrics"],
+            )
             archived_predictions_content = archived_predictions.read_text(
                 encoding="utf-8"
             )
@@ -224,6 +262,10 @@ class BinaryEvaluationMetricsTests(unittest.TestCase):
                 )["metrics"]["accuracy"],
                 1,
             )
+            saved_metrics = json.loads(
+                config.metrics_output_path.read_text(encoding="utf-8")
+            )["metrics"]
+            self.assertAlmostEqual(saved_metrics["brier_skill_score"], 0.96)
             evaluator.save_score()
             self.assertEqual(len(list((config.root_dir / "runs").iterdir())), 2)
             self.assertEqual(

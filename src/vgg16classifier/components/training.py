@@ -47,16 +47,26 @@ class Training:
     def __init__(self, config: TrainingConfig):
         self.config = config
 
+    def _fine_tune_layer_names(self) -> set[str]:
+        if self.config.params_model_architecture == "efficientnetv2s":
+            return {
+                layer.name
+                for layer in self.model.layers
+                if layer.name.startswith(("block6", "top_"))
+                and layer.weights
+                and not isinstance(layer, tf.keras.layers.BatchNormalization)
+            }
+        return set(self.config.params_fine_tune_layers)
+
     def get_base_model(self):
+        custom_objects = {
+            "preprocess_input": tf.keras.applications.vgg16.preprocess_input,
+            "VGG16Preprocessing": VGG16Preprocessing,
+            "CircleMask": CircleMask,
+        }
         self.model = tf.keras.models.load_model(
             self.config.updated_base_model_path,
-            custom_objects={
-                "preprocess_input": (
-                    tf.keras.applications.vgg16.preprocess_input
-                ),
-                "VGG16Preprocessing": VGG16Preprocessing,
-                "CircleMask": CircleMask,
-            },
+            custom_objects=custom_objects,
         )
         self._compile_model(self.config.params_learning_rate)
 
@@ -178,6 +188,7 @@ class Training:
         class_weight_dict = get_balanced_class_weights(self.train_labels)
         logger.info(f"Class weights: {class_weight_dict}")
         base_Model_config = ConfigurationManager().get_prepare_base_model_config()
+        configured_fine_tune_layers = self._fine_tune_layer_names()
         metadata = create_training_metadata(
             repo_root=repo_root,
             dataset_root=Path(self.config.training_data_dir),
@@ -212,7 +223,8 @@ class Training:
                 "image_size": list(self.config.params_image_size),
                 "validation_split": self.config.validation_split,
                 "fine_tune_epochs": self.config.params_fine_tune_epochs,
-                "fine_tune_layers": list(self.config.params_fine_tune_layers),
+                "fine_tune_layers": sorted(configured_fine_tune_layers),
+                "model_architecture": self.config.params_model_architecture,
                 "fine_tune_learning_rate": self.config.params_fine_tune_learning_rate,
                 "head_dropout_rate": self.config.params_head_dropout_rate,
                 "head_l2_strength": self.config.params_head_l2_strength,
@@ -225,7 +237,18 @@ class Training:
                 "target_size": list(self.config.params_image_size[:-1]),
                 "color_mode": "rgb",
                 "rescale": None,
-                "vgg16_preprocess_input": True,
+                "model_architecture": self.config.params_model_architecture,
+                "vgg16_preprocess_input": (
+                    self.config.params_model_architecture == "vgg16"
+                ),
+                "efficientnetv2s_embedded_preprocessing": (
+                    self.config.params_model_architecture == "efficientnetv2s"
+                ),
+                "circle_mask_background_fill": (
+                    [123.68, 116.78, 103.94]
+                    if self.config.params_model_architecture == "vgg16"
+                    else 127.5
+                ),
             },
             optimizer=(
                 type(self.model.optimizer).__name__
@@ -253,9 +276,6 @@ class Training:
             history = head_history.history
             if self.config.params_fine_tune_epochs > 0:
                 completed_head_epochs = len(head_history.epoch)
-                configured_fine_tune_layers = set(
-                    self.config.params_fine_tune_layers
-                )
                 if not configured_fine_tune_layers:
                     raise ValueError(
                         "At least one fine-tune layer must be configured when "

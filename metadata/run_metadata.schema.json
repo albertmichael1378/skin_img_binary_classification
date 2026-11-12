@@ -160,6 +160,54 @@
       },
       "additionalProperties": false
     },
+    "evaluation": {
+      "type": "object",
+      "required": [
+        "evaluated_at_utc",
+        "dataset_manifest_sha256",
+        "positive_class",
+        "reference_forecast",
+        "metrics"
+      ],
+      "properties": {
+        "evaluated_at_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "dataset_manifest_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "positive_class": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reference_forecast": {
+          "const": "test_set_class_prevalence"
+        },
+        "metrics": {
+          "type": "object",
+          "required": [
+            "brier_score",
+            "brier_score_reference",
+            "brier_skill_score"
+          ],
+          "properties": {
+            "brier_score": {
+              "type": "number"
+            },
+            "brier_score_reference": {
+              "type": "number"
+            },
+            "brier_skill_score": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
     "environment": {
       "type": "object",
       "required": ["python", "tensorflow", "numpy", "dvc"],

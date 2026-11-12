@@ -35,6 +35,16 @@ training images, ground-truth labels, and metadata.
   head. Training first fits the head with the pretrained backbone frozen, then
   fine-tunes VGG16 block 5 at a lower learning rate. This makes training,
   evaluation, and prediction use the same input preprocessing.
+- EfficientNetV2-S is available as an alternative implementation under
+  `src/vgg16classifier/efficientnetv2s/`. Set `MODEL_ARCHITECTURE` in
+  `params.yaml` to `efficientnetv2s` to build it; `vgg16` remains the default.
+  EfficientNetV2-S uses its built-in preprocessing and a neutral 127.5-valued
+  circle-mask background. It uses global average pooling and fine-tunes its
+  final block and top layers. This setting changes the model graph, not the
+  trained weights: train a new model and evaluate it before using it. The model
+  and checkpoint paths in `config/config.yaml` should point to separate files
+  when preserving both architectures. Model migration and inference latency
+  have not been benchmarked.
 - Optional model-integrated augmentation (horizontal/vertical flips, up to 20°
   rotation, 10% zoom, 20% contrast, and a configurable 10% brightness range)
   is active during training and disabled automatically for evaluation and
@@ -61,6 +71,7 @@ docs/                           Project-specific ML improvement plan
 metadata/                       Run metadata JSON Schema
 src/vgg16classifier/
   components/                   Model, training, evaluation, callbacks
+  efficientnetv2s/               Optional EfficientNetV2-S backbone
   config/                       Configuration loading
   entity/                       Configuration dataclasses
   pipeline/                     DVC stage entry points and prediction
@@ -116,6 +127,22 @@ When ready, from the activated environment:
 python -m dvc repro
 python -m dvc status
 ```
+
+To select EfficientNetV2-S, change `MODEL_ARCHITECTURE` in `params.yaml` to
+`efficientnetv2s`. Before training, use model-specific paths in
+`config/config.yaml` for the base model, updated base model, training checkpoint,
+and final trained model so this experiment does not overwrite VGG16 artifacts.
+If using the archive-reconstruction evaluation script, also point
+`evaluation.weights_archive_path` at an archive created from the selected
+EfficientNetV2-S model. For example, use paths such as
+`artifacts/prepare_base_model/efficientnetv2s_base.keras`,
+`artifacts/prepare_base_model/efficientnetv2s_base_updated.keras`,
+`artifacts/prepare_callbacks/checkpoints_dir/efficientnetv2s.keras`, and
+`artifacts/training/efficientnetv2s.keras` for the base, updated base,
+checkpoint, and trained model respectively.
+The existing VGG16 configuration remains the default. Changing the architecture
+requires retraining; existing VGG16 weights cannot be reused as EfficientNetV2-S
+weights.
 
 Training metadata is written as timestamped JSON files under
 `artifacts/training/run_metadata/`. The DVC lockfile should be regenerated only
@@ -185,8 +212,12 @@ trade-off visible. For a target-sensitivity workflow, calibrate the threshold
 on a separate validation set first, then freeze it in the configuration before
 running this evaluation. It writes a JSON report with accuracy,
 class-specific precision/recall/F1, sensitivity, specificity, balanced
-accuracy, ROC-AUC, PR-AUC, Brier score, a confusion matrix, and stratified
-bootstrap confidence intervals. `bootstrap_samples` is the number of
+accuracy, ROC-AUC, PR-AUC, Brier score, Brier skill score, a confusion matrix,
+and stratified bootstrap confidence intervals. Brier skill score uses the
+test-set positive-class prevalence as its climatology reference (1 is perfect,
+0 matches the reference, and negative values are worse than the reference).
+The latest evaluation summary is also recorded in the matching training-run
+metadata by model checksum. `bootstrap_samples` is the number of
 class-stratified resamples used to estimate those intervals: larger values
 usually make the estimates steadier but take longer. It does not add images or
 improve model accuracy. These image-level intervals assume samples are

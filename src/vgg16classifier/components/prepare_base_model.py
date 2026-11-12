@@ -12,6 +12,7 @@ import tensorflow as tf
 tf.keras.mixed_precision.set_global_policy("mixed_float16")  # before building the model
 from pathlib import Path
 from vgg16classifier.entity.configaration_entities import PrepareBaseModelConfig
+from vgg16classifier.efficientnetv2s.model import build_backbone as build_efficientnetv2s
 
 
 
@@ -28,10 +29,12 @@ class VGG16Preprocessing(tf.keras.layers.Layer):
 # 1. Define the 2_nd_custom layer at the top of your file
 
 
+@tf.keras.utils.register_keras_serializable(package="vgg16classifier")
 class CircleMask(tf.keras.layers.Layer):
-    def __init__(self, radius=0.46, **kw):
+    def __init__(self, radius=0.46, fill_value=None, **kw):
         super().__init__(**kw)
         self.radius = radius
+        self.fill_value = fill_value
 
     def call(self, x):
         h, w = tf.shape(x)[1], tf.shape(x)[2]
@@ -46,15 +49,16 @@ class CircleMask(tf.keras.layers.Layer):
         # Create the circular mask
         mask = tf.cast(tf.sqrt(xx**2 + yy**2) <= self.radius, x.dtype)[None, ..., None]
         
-        # VGG16 ImageNet means
-        mean = tf.constant([123.68, 116.78, 103.94], dtype=x.dtype)
-        
-        # Apply mask and fill background with mean
-        return x * mask + mean * (1 - mask)
+        if self.fill_value is None:
+            # Preserve the original VGG16 background behavior.
+            fill = tf.constant([123.68, 116.78, 103.94], dtype=x.dtype)
+        else:
+            fill = tf.cast(self.fill_value, x.dtype)
+        return x * mask + fill * (1 - mask)
 
     def get_config(self):
         config = super().get_config()
-        config.update({"radius": self.radius})
+        config.update({"radius": self.radius, "fill_value": self.fill_value})
         return config
 
 class PrepareBaseModel:
@@ -62,7 +66,13 @@ class PrepareBaseModel:
         self.config = config
 
     def _build_base_model(self, weights: str | None) -> None:
-        
+        architecture = self.config.params_model_architecture
+        if architecture not in {"vgg16", "efficientnetv2s"}:
+            raise ValueError(
+                "Unsupported model architecture "
+                f"{architecture!r}; expected 'vgg16' or 'efficientnetv2s'"
+            )
+
         inputs = tf.keras.Input(shape=self.config.params_image_size)
         x = inputs
         if self.config.params_is_augmentation:
@@ -82,15 +92,29 @@ class PrepareBaseModel:
                 ],
                 name="augmentation",
             )(x)
-        # STEP 2: Apply the Circle Mask
-        x = CircleMask(radius=0.36, name="circle_mask")(x)
-        preprocessed_inputs = VGG16Preprocessing(name="vgg16_preprocess")(x)
-        self.model = tf.keras.applications.vgg16.VGG16(
-            input_shape=self.config.params_image_size,
-            weights=weights,
-            include_top=self.config.params_include_top,
-            input_tensor=preprocessed_inputs,
-        )
+        if architecture == "vgg16":
+            x = CircleMask(radius=0.36, name="circle_mask")(x)
+            preprocessed_inputs = VGG16Preprocessing(name="vgg16_preprocess")(x)
+            self.model = tf.keras.applications.vgg16.VGG16(
+                input_shape=self.config.params_image_size,
+                weights=weights,
+                include_top=self.config.params_include_top,
+                input_tensor=preprocessed_inputs,
+            )
+        else:
+            # EfficientNetV2 scales raw 0-255 input internally; 127.5 maps to
+            # zero under its built-in [-1, 1] preprocessing.
+            x = CircleMask(
+                radius=0.36,
+                fill_value=127.5,
+                name="circle_mask",
+            )(x)
+            self.model = build_efficientnetv2s(
+                input_shape=self.config.params_image_size,
+                input_tensor=x,
+                weights=weights,
+                include_top=self.config.params_include_top,
+            )
 
     def get_base_model(self):
         self._build_base_model(weights=self.config.params_weights)
@@ -116,8 +140,7 @@ class PrepareBaseModel:
                 f"Refusing to overwrite an existing model: {output_path}"
             )
 
-        # The original archive's Keras 3 Functional config cannot load in this
-        # project's Keras 2 runtime, so rebuild the known VGG16 classifier graph.
+        # Rebuild the configured classifier graph before restoring archive weights.
         self._build_base_model(weights=None)
         self.full_model = self._prepare_full_model(
             model=self.model,
@@ -253,7 +276,7 @@ class PrepareBaseModel:
                 units=1, activation='sigmoid',dtype="float32", name="classifier"
             )(x)
         else:
-            # If you ever change to multi-class, it automatically switches to softmax
+                # If you ever change to multi-class, it automatically switches to softmax
             x = tf.keras.layers.Dense(
                 units=classes, activation='softmax', dtype="float32", name="classifier"
             )(x)

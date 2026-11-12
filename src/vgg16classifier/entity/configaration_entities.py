@@ -6,6 +6,7 @@ class PrepareBaseModelConfig:
     root_dir: Path
     base_model_path: Path
     updated_base_model_path: Path
+    params_model_architecture: str
     params_image_size: list
     params_learning_rate: float
     params_include_top: bool
@@ -33,6 +34,7 @@ class TrainingConfig:
     metadata_dir: Path
     trained_model_path: Path
     updated_base_model_path: Path
+    params_model_architecture: str
     training_data_dir: Path
     validation_split: float
     params_epochs: int

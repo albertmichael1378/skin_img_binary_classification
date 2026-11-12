@@ -1,3 +1,4 @@
+import hashlib
 import json
 import tempfile
 import unittest
@@ -7,6 +8,7 @@ from vgg16classifier.components.run_metadata import (
     create_training_metadata,
     finish_training_metadata,
     run_metadata_path,
+    update_evaluation_metadata,
     write_run_metadata,
 )
 from vgg16classifier.pipeline.predict import PredictionPipeline, binary_class_index
@@ -78,6 +80,43 @@ class TrainingMetadataTests(unittest.TestCase):
             "artifacts/training/run_metadata/"
             "run_metadata_20261026T063015123456Z_12345678.json",
         )
+
+    def test_evaluation_metadata_updates_matching_completed_model_run(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            metadata_dir = root / "metadata"
+            metadata_dir.mkdir()
+            model_path = root / "model.keras"
+            model_path.write_bytes(b"model")
+            model_hash = hashlib.sha256(model_path.read_bytes()).hexdigest()
+            metadata_path = metadata_dir / "run_metadata.json"
+            write_run_metadata(
+                metadata_path,
+                {
+                    "status": "completed",
+                    "started_at_utc": "2026-10-27T12:00:00+00:00",
+                    "model": {"sha256": model_hash},
+                },
+            )
+            evaluation = {
+                "metrics": {
+                    "brier_score": 0.1,
+                    "brier_score_reference": 0.25,
+                    "brier_skill_score": 0.6,
+                }
+            }
+
+            updated_path = update_evaluation_metadata(
+                metadata_dir, model_path, evaluation
+            )
+
+            self.assertEqual(updated_path, metadata_path)
+            self.assertEqual(
+                json.loads(metadata_path.read_text(encoding="utf-8"))[
+                    "evaluation"
+                ],
+                evaluation,
+            )
 
     def test_binary_output_uses_sigmoid_threshold_or_two_class_argmax(self):
         self.assertEqual(binary_class_index([[0.49]]), 0)

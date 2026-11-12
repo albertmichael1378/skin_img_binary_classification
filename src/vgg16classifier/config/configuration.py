@@ -22,6 +22,14 @@ class ConfigurationManager:
 
         self.config = read_yaml(config_filepath)
         self.params = read_yaml(params_filepath)
+        self.model_architecture = str(
+            self.params.MODEL_ARCHITECTURE
+        ).lower()
+        if self.model_architecture not in {"vgg16", "efficientnetv2s"}:
+            raise ValueError(
+                "MODEL_ARCHITECTURE must be 'vgg16' or 'efficientnetv2s', "
+                f"got {self.model_architecture!r}"
+            )
 
         create_directories([self.config.artifacts_root])
     def get_prepare_base_model_config(self) -> PrepareBaseModelConfig:
@@ -33,6 +41,7 @@ class ConfigurationManager:
                 root_dir=Path(config.root_dir),
                 base_model_path=Path(config.base_model_path),
                 updated_base_model_path=Path(config.updated_base_model_path),
+                params_model_architecture=self.model_architecture,
                 params_image_size=self.params.IMAGE_SIZE,
                 params_learning_rate=self.params.LEARNING_RATE,
                 params_include_top=self.params.INCLUDE_TOP,
@@ -89,6 +98,7 @@ class ConfigurationManager:
             metadata_dir=Path(training.metadata_dir),
             trained_model_path=trained_model_path,
             updated_base_model_path=Path(prepare_base_model.updated_base_model_path),
+            params_model_architecture=self.model_architecture,
             training_data_dir=Path(training.training_data_dir),
             validation_split=training.validation_split,
             params_epochs=params.EPOCHS,

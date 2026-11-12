@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 
 from vgg16classifier.entity.configaration_entities import EvaluationConfigs
+from vgg16classifier.components.run_metadata import update_evaluation_metadata
 
 if TYPE_CHECKING:
     # Keep TensorFlow as a type-only dependency so metric tests can run without it.
@@ -146,12 +147,22 @@ def calculate_binary_metrics(
             (probabilities < 0) | (probabilities > 1)
         ):
             raise ValueError("Class probabilities must be finite and between 0 and 1")
+        actual_positive_float = actual_positive.astype(np.float64)
+        brier_score = float(
+            np.mean((probabilities - actual_positive_float) ** 2)
+        )
+        reference_probability = float(np.mean(actual_positive_float))
+        brier_score_reference = float(
+            np.mean((reference_probability - actual_positive_float) ** 2)
+        )
         metrics.update(
             {
                 "roc_auc": _roc_auc(actual_positive, probabilities),
                 "pr_auc": _average_precision(actual_positive, probabilities),
-                "brier_score": float(
-                    np.mean((probabilities - actual_positive.astype(float)) ** 2)
+                "brier_score": brier_score,
+                "brier_score_reference": brier_score_reference,
+                "brier_skill_score": (
+                    1 - brier_score / brier_score_reference
                 ),
             }
         )
@@ -214,6 +225,8 @@ def _stratified_bootstrap_intervals(
             "roc_auc",
             "pr_auc",
             "brier_score",
+            "brier_score_reference",
+            "brier_skill_score",
         )
     }
     for _ in range(samples):
@@ -280,13 +293,17 @@ class Evaluation:
     @staticmethod
     def load_model(path: Path) -> tf.keras.Model:
         import tensorflow as tf
-        from vgg16classifier.components.prepare_base_model import VGG16Preprocessing
+        from vgg16classifier.components.prepare_base_model import (
+            CircleMask,
+            VGG16Preprocessing,
+        )
 
         return tf.keras.models.load_model(
             path,
             custom_objects={
                 "preprocess_input": tf.keras.applications.vgg16.preprocess_input,
                 "VGG16Preprocessing": VGG16Preprocessing,
+                "CircleMask": CircleMask,
             },
         )
 
@@ -483,6 +500,7 @@ class Evaluation:
                 "positive_class": self.config.positive_class,
                 "decision_threshold": threshold,
                 "threshold_selection": "configured_before_evaluation; not tuned here",
+                "brier_skill_score_reference": "test_set_class_prevalence",
                 "bootstrap_samples": self.config.bootstrap_samples,
                 "confidence_level": self.config.confidence_level,
                 "confidence_interval_method": (
@@ -549,6 +567,27 @@ class Evaluation:
         self._write_predictions(run_dir / "predictions.csv")
         self._write_metrics(self.config.metrics_output_path)
         self._write_predictions(self.config.predictions_output_path)
+        assert self.score is not None
+        metric_names = (
+            "brier_score",
+            "brier_score_reference",
+            "brier_skill_score",
+        )
+        update_evaluation_metadata(
+            self.config.training_metadata_dir,
+            self.config.path_of_model,
+            {
+                "evaluated_at_utc": self.score["evaluated_at_utc"],
+                "dataset_manifest_sha256": self.score["dataset"]["manifest_sha256"],
+                "positive_class": self.score["protocol"]["positive_class"],
+                "reference_forecast": self.score["protocol"][
+                    "brier_skill_score_reference"
+                ],
+                "metrics": {
+                    name: self.score["metrics"][name] for name in metric_names
+                },
+            },
+        )
 
     def _write_metrics(self, path: Path) -> None:
         with path.open("w", encoding="utf-8") as metrics_file:

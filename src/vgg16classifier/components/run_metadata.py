@@ -181,6 +181,57 @@ def write_run_metadata(path: Path, metadata: Mapping[str, Any]) -> None:
     temporary_path.replace(path)
 
 
+def update_evaluation_metadata(
+    metadata_dir: Path,
+    model_path: Path,
+    evaluation: Mapping[str, Any],
+) -> Path:
+    """Persist the latest evaluation summary in metadata for the matching model."""
+    if not metadata_dir.is_dir():
+        raise FileNotFoundError(
+            f"Training metadata directory does not exist: {metadata_dir}"
+        )
+
+    model_hash = _sha256_file(model_path)
+    matching_runs: list[tuple[str, Path, dict[str, Any]]] = []
+    for metadata_path in metadata_dir.glob("*.json"):
+        try:
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
+            raise ValueError(
+                f"Could not read training metadata: {metadata_path}"
+            ) from error
+
+        if (
+            isinstance(metadata, dict)
+            and isinstance(metadata.get("model"), dict)
+            and metadata["model"].get("sha256") == model_hash
+        ):
+            matching_runs.append(
+                (
+                    str(metadata.get("started_at_utc", "")),
+                    metadata_path,
+                    metadata,
+                )
+            )
+
+    if not matching_runs:
+        raise FileNotFoundError(
+            f"No training metadata found for model {model_path} "
+            f"(SHA-256 {model_hash})."
+        )
+
+    _, metadata_path, metadata = max(matching_runs, key=lambda run: run[0])
+    if metadata.get("status") != "completed":
+        raise ValueError(
+            f"Training metadata for model {model_path} is not completed."
+        )
+
+    metadata["evaluation"] = dict(evaluation)
+    write_run_metadata(metadata_path, metadata)
+    return metadata_path
+
+
 def run_metadata_path(metadata_dir: Path, metadata: Mapping[str, Any]) -> Path:
     """Build a stable, timestamped path for one training run's metadata record."""
     started_at = metadata.get("started_at_utc")

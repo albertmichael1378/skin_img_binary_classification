@@ -157,7 +157,10 @@ class Keras3Evaluation(Evaluation):
                 "The evaluation data pipeline uses TensorFlow; configure Keras "
                 "3 to use the TensorFlow backend."
             )
-        from vgg16classifier.components.prepare_base_model import VGG16Preprocessing, CircleMask
+        from vgg16classifier.components.prepare_base_model import (
+            CircleMask,
+            VGG16Preprocessing,
+        )
 
         return keras.models.load_model(
             path,

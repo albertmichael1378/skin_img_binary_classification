@@ -10,6 +10,8 @@ stages:
     deps:
       - src/vgg16classifier/pipeline/stage_02_prepare_base_model.py
       - src/vgg16classifier/components/prepare_base_model.py
+      - src/vgg16classifier/efficientnetv2s/model.py
+      - src/vgg16classifier/efficientnetv2s/__init__.py
       - src/vgg16classifier/config/configuration.py
       - src/vgg16classifier/entity/configaration_entities.py
       - src/vgg16classifier/utils/common.py
@@ -21,6 +23,7 @@ stages:
       - INCLUDE_TOP
       - CLASSES
       - WEIGHTS
+      - MODEL_ARCHITECTURE
       - LEARNING_RATE
       - AUGMENTATION_BRIGHTNESS_FACTOR
       - HEAD_DROPOUT_RATE
@@ -56,6 +59,7 @@ stages:
       - LEARNING_RATE
       - FINE_TUNE_LEARNING_RATE
       - FINE_TUNE_LAYERS
+      - MODEL_ARCHITECTURE
       - HEAD_DROPOUT_RATE
       - HEAD_L2_STRENGTH
       - EARLY_STOPPING_PATIENCE

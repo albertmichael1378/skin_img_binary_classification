@@ -31,15 +31,14 @@ class PrepareCallback:
             tf.keras.callbacks.EarlyStopping(
                 monitor="val_auc",
                 mode="max",
+                min_delta=0.001,
                 patience=self.config.early_stopping_patience,
                 restore_best_weights=True,
             ),
             tf.keras.callbacks.ReduceLROnPlateau(
                 monitor="val_auc",
                 mode="max",
-                factor=0.5,
-                patience=4,
-                min_lr=1e-6,
+                min_delta=0.001, factor=0.5, patience=4, min_lr=1e-6,
             ),
             self._create_ckpt_callbacks(phase),
         ]

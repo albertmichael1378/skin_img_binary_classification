@@ -1,4 +1,4 @@
-"""Rebuild the classifier from a Keras weights archive and run evaluation."""
+"""Rebuild the configured classifier from a Keras weights archive."""
 
 import argparse
 from dataclasses import replace
@@ -11,27 +11,28 @@ from vgg16classifier.config.configuration import ConfigurationManager
 
 
 def main() -> None:
+    configuration = ConfigurationManager()
+    configured_evaluation = configuration.get_evaluation_config()
     parser = argparse.ArgumentParser(
         description=(
-            "Rebuild the project's VGG16 classifier from a Keras weights archive "
+            "Rebuild the configured classifier from a Keras weights archive "
             "and evaluate it on the configured labeled dataset."
         )
     )
     parser.add_argument(
         "--archive",
         type=Path,
-        default=Path("artifacts/training/vgg16model..zip"),
+        default=configured_evaluation.weights_archive_path,
         help="ZIP containing config.json, metadata.json, and model.weights.h5",
     )
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path("artifacts/training/vgg16model_reconstructed.keras"),
+        default=configured_evaluation.reconstructed_model_path,
         help="Destination for the reconstructed model; existing files are preserved",
     )
     args = parser.parse_args()
 
-    configuration = ConfigurationManager()
     prepare_base_model = PrepareBaseModel(
         config=configuration.get_prepare_base_model_config()
     )
@@ -41,10 +42,7 @@ def main() -> None:
     )
 
     # Evaluate the restored model without changing the normal training model path.
-    evaluation_config = replace(
-        configuration.get_evaluation_config(),
-        path_of_model=model_path,
-    )
+    evaluation_config = replace(configured_evaluation, path_of_model=model_path)
     evaluation = Evaluation(evaluation_config)
     evaluation.evaluation()
     evaluation.save_score()

@@ -6,10 +6,11 @@ RANDOM_ZOOM: [-0.2, 0.1]
 IMAGE_SIZE: [224, 224, 3] # as per the keras VGG 16 model
 BATCH_SIZE: 62
 INCLUDE_TOP: False
-EPOCHS: 100
-FINE_TUNE_EPOCHS: 50
+EPOCHS: 70
+FINE_TUNE_EPOCHS: 30
 CLASSES: 2
 WEIGHTS: imagenet
+MODEL_ARCHITECTURE: efficientnetv2s # supported: vgg16, efficientnetv2s
 LEARNING_RATE: 0.0001
 FINE_TUNE_LEARNING_RATE: 0.00001
 FINE_TUNE_LAYERS: [block4_conv1, block4_conv2, block4_conv3, block5_conv1, block5_conv2, block5_conv3]
