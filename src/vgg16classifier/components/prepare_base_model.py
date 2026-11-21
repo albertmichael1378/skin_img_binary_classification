@@ -2,8 +2,6 @@
 # 1. Initializing the environment FIRST
 from vgg16classifier.utils.common import set_deterministic_environment
 set_deterministic_environment(seed=42)
-strategy = tf.distribute.MirroredStrategy()
-print("Number of devices:", strategy.num_replicas_in_sync)  # Should print 2
 import os
 import shutil
 import tempfile
