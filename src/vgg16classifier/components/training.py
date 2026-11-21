@@ -46,6 +46,8 @@ def get_balanced_class_weights(labels):
 class Training:
     def __init__(self, config: TrainingConfig):
         self.config = config
+        self.strategy = tf.distribute.MirroredStrategy()
+        logger.info(f"Number of devices: {self.strategy.num_replicas_in_sync}")
 
     def _fine_tune_layer_names(self) -> set[str]:
         if self.config.params_model_architecture == "efficientnetv2s":
@@ -64,24 +66,26 @@ class Training:
             "VGG16Preprocessing": VGG16Preprocessing,
             "CircleMask": CircleMask,
         }
-        self.model = tf.keras.models.load_model(
-            self.config.updated_base_model_path,
-            custom_objects=custom_objects,
-        )
-        self._compile_model(self.config.params_learning_rate)
+        with strategy.scope():
+            self.model = tf.keras.models.load_model(
+                self.config.updated_base_model_path,
+                custom_objects=custom_objects,
+            )
+            self._compile_model(self.config.params_learning_rate)
 
     def _compile_model(self, learning_rate: float) -> None:
-        self.model.compile(
-            optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
-            loss=tf.keras.losses.BinaryCrossentropy(),
-            metrics=[
-                tf.keras.metrics.BinaryAccuracy(name="accuracy"),
-                tf.keras.metrics.Precision(name="precision"),
-                tf.keras.metrics.Recall(name="recall"),
-                tf.keras.metrics.AUC(name="auc"),
-                tf.keras.metrics.AUC(name="pr_auc", curve="PR"),
-            ],
-        )
+        with self.strategy.scope():
+            self.model.compile(
+                optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
+                loss=tf.keras.losses.BinaryCrossentropy(),
+                metrics=[
+                    tf.keras.metrics.BinaryAccuracy(name="accuracy"),
+                    tf.keras.metrics.Precision(name="precision"),
+                    tf.keras.metrics.Recall(name="recall"),
+                    tf.keras.metrics.AUC(name="auc"),
+                    tf.keras.metrics.AUC(name="pr_auc", curve="PR"),
+                ],
+            )
     def train_valid_generator(self):
         # 1. Load Validation Dataset
         self.valid_dataset = tf.keras.utils.image_dataset_from_directory(
