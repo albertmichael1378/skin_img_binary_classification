@@ -66,7 +66,7 @@ class Training:
             "VGG16Preprocessing": VGG16Preprocessing,
             "CircleMask": CircleMask,
         }
-        with strategy.scope():
+        with self.strategy.scope():
             self.model = tf.keras.models.load_model(
                 self.config.updated_base_model_path,
                 custom_objects=custom_objects,
